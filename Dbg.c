@@ -173,12 +173,12 @@ Tcl_Obj *objPtr;
     }
 }
 
-/* return 1 to break, 0 to continue */
+/* return 1 to break, 0 to continue 
+ * cmd: command about to be executed
+ * bp: breakpoint to test
+ */
 static int
-breakpoint_test(interp,cmd,bp)
-Tcl_Interp *interp;
-char *cmd;		/* command about to be executed */
-struct breakpoint *bp;	/* breakpoint to test */
+breakpoint_test(Tcl_Interp *interp,const char *cmd,struct breakpoint *bp)
 {
     if (bp->re) {
         int found = 0;
@@ -239,7 +239,7 @@ TclGetFrame2(interp, origFramePtr, string, framePtrPtr, dir)
 {
     Interp *iPtr = (Interp *) interp;
     int level, result;
-    CallFrame *framePtr;	/* frame currently being searched */
+    CallFrame *framePtr = NULL;	/* frame currently being searched */
 
     CallFrame *curFramePtr = iPtr->varFramePtr;
 
@@ -301,7 +301,6 @@ TclGetFrame2(interp, origFramePtr, string, framePtrPtr, dir)
     *framePtrPtr = framePtr;
     return result;
 }
-
 
 static char *printify(s)
 char *s;
@@ -658,6 +657,8 @@ debugger_trap(clientData,interp,level,command,commandInfo,objc,objv)
 		if (goalFramePtr != iPtr->varFramePtr) goto finish;
 		goto start_interact;
     /* DANGER: unhandled cases! none, up, down, where */
+	default:
+		break; /* Silence compiler warning */
 	}
 
 start_interact:
@@ -716,6 +717,8 @@ end_interact:
 	case where:
 	PrintStack(interp,iPtr->varFramePtr,viewFramePtr,objc,objv,level_text);
 		break;
+	default:
+		break; /* Silence compiler warning */
 	}
 
 	/* restore view and restart interactor */

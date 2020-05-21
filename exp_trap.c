@@ -297,11 +297,10 @@ char *s;
 
 /*ARGSUSED*/
 int
-Exp_TrapObjCmd(clientData, interp, objc, objv)
-ClientData clientData;
-Tcl_Interp *interp;
-int objc;
-Tcl_Obj *CONST objv[];
+Exp_TrapObjCmd(ClientData clientData,
+	       Tcl_Interp *interp,
+	       int objc,
+	       Tcl_Obj *CONST objv[])
 {
 	char *action = 0;
 	int n;		/* number of signals in list */
@@ -319,7 +318,9 @@ Tcl_Obj *CONST objv[];
 
 	objc--; objv++;
 
-	while (objc) {
+	if (objc <= 0) goto usage_error;
+
+	do {
 	  arg = Tcl_GetString(*objv);
 
 		if (streq(arg,"-code")) {
@@ -338,7 +339,7 @@ Tcl_Obj *CONST objv[];
 			objc--; objv++;
 			show_max = TRUE;
 		} else break;
-	}
+	} while(objc);
 
 	if (show_name || show_number || show_max) {
 		if (objc > 0) goto usage_error;

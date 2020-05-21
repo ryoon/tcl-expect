@@ -50,6 +50,10 @@ would appreciate credit if this program or parts of it are used.
 # endif
 #endif
 
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#endif
+
 #include <signal.h>
 /*#include <memory.h> - deprecated - ANSI C moves them into string.h */
 #include "string.h"
@@ -116,6 +120,7 @@ extern unsigned long	strtoul _ANSI_ARGS_((CONST char *string,
 
 #include <tcl.h>
 #include "expect.h"
+#include "exp_command.h"
 #define TclRegError exp_TclRegError
 
 /*
@@ -1807,6 +1812,13 @@ int fd;
 
 }
 
+/* ultrix (at least 4.1-2) fails to obtain controlling tty if setsid */
+/* is called.  setpgrp works though.  */
+#if defined(POSIX) && !defined(ultrix) || defined(__convex__)
+#define DO_SETSID
+#endif
+
+#if !defined(DO_SETSID) && (!defined(SYSV3) || defined(CRAY)) /* { */
 static
 void
 exp_setpgrp()
@@ -1823,6 +1835,7 @@ exp_setpgrp()
     (void) setpgrp(0,0);
 #endif
 }
+#endif /* } */
 
 /* returns fd of master side of pty */
 int
@@ -1833,7 +1846,9 @@ char *argv[];	/* some compiler complains about **argv? */
 	int cc;
 	int errorfd;	/* place to stash fileno(stderr) in child */
 			/* while we're setting up new stderr */
+#if defined(TIOCNOTTY) && !defined(SYSV3) && !defined(DO_SETSID)
 	int ttyfd;
+#endif
 	int sync_fds[2];
 	int sync2_fds[2];
 	int status_pipe[2];
@@ -2006,15 +2021,6 @@ when trapping, see below in child half of fork */
 
 #ifdef CRAY
 	(void) close(exp_pty[0]);
-#endif
-
-/* ultrix (at least 4.1-2) fails to obtain controlling tty if setsid */
-/* is called.  setpgrp works though.  */
-#if defined(POSIX) && !defined(ultrix)
-#define DO_SETSID
-#endif
-#ifdef __convex__
-#define DO_SETSID
 #endif
 
 #ifdef DO_SETSID
@@ -2444,7 +2450,7 @@ struct exp_case *ecases;
 	int return_val;
 	int sys_error = 0;
 #define return_normally(x)	{return_val = x; goto cleanup;}
-#define return_errno(x)	{sys_error = x; goto cleanup;}
+#define return_errno(x)	{sys_error = x; return_val = -1; goto cleanup;}
 
 	f = fdfp2f(fd,fp);
 	if (!f) return_errno(ENOMEM);
@@ -2853,7 +2859,9 @@ char *program;
 int
 exp_disconnect()
 {
+#if defined(TIOCNOTTY) && !defined(SYSV3) && !defined(POSIX)
 	int ttyfd;
+#endif
 
 #ifndef EALREADY
 #define EALREADY 37

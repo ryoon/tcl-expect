@@ -404,8 +404,8 @@ intEcho(
     int matchBytes)
 {
     int seenBytes;	/* either printed or echoed */
-    int echoBytes;
-    int offsetBytes;
+    int echoBytes = 0;
+    int offsetBytes = 0;
 
     /* write is unlikely to fail, since we just read from same descriptor */
     seenBytes = esPtr->printed + esPtr->echoed;
@@ -705,9 +705,6 @@ inter_updateproc(
 }
 			
 #define finish(x)	{ status = x; goto done; }
-
-static char return_cmd[] = "return";
-static char interpreter_cmd[] = "interpreter";
 
 /*ARGSUSED*/
 int
@@ -1344,15 +1341,15 @@ Exp_InteractObjCmd(
 	int rc;	/* return code from ready.  This is further refined by matcher. */
 	int cc;			/* # of chars from read() */
 	struct action *action = 0;
-	time_t previous_time;
+	time_t previous_time = 0;
 	time_t current_time;
-	int matchLen;	/* # of chars matched */
+	int matchLen = 0;	/* # of chars matched */
 	int skip;		/* # of chars not involved in match */
 	int print;		/* # of chars to print */
 	int oldprinted;		/* old version of u->printed */
 	int change;		/* if action requires cooked mode */
 	int attempt_match = TRUE;
-	struct input *soonest_input;
+	struct input *soonest_input = NULL;
 	int timeout;	/* current as opposed to default_timeout */
 	Tcl_Time temp_time;
 

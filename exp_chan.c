@@ -25,9 +25,8 @@
 
 #include <errno.h>
 
-#include	"tclInt.h"	/* Internal definitions for Tcl. */
-
-#include "tcl.h"
+#include <tclInt.h>	/* Internal definitions for Tcl. */
+#include <tcl.h>
 
 #include "string.h"
 
@@ -35,6 +34,7 @@
 #include "exp_prog.h"
 #include "exp_command.h"
 #include "exp_log.h"
+#include "exp_event.h"
 #include "tcldbg.h" /* Dbg_StdinMode */
 
 extern int		expSetBlockModeProc _ANSI_ARGS_((int fd, int mode));
@@ -57,17 +57,14 @@ static int		ExpGetHandleProc _ANSI_ARGS_((ClientData instanceData,
  */
 
 Tcl_ChannelType expChannelType = {
-    "exp",				/* Type name. */
-    ExpBlockModeProc,			/* Set blocking/nonblocking mode.*/
-    ExpCloseProc,			/* Close proc. */
-    ExpInputProc,			/* Input proc. */
-    ExpOutputProc,			/* Output proc. */
-    NULL,				/* Seek proc. */
-    NULL,				/* Set option proc. */
-    NULL,				/* Get option proc. */
-    ExpWatchProc,			/* Initialize notifier. */
-    ExpGetHandleProc,			/* Get OS handles out of channel. */
-    NULL,				/* Close2 proc */
+    .typeName = "exp",			/* Type name. */
+    .version = TCL_CHANNEL_VERSION_2,
+    .blockModeProc = ExpBlockModeProc,	/* Set blocking/nonblocking mode.*/
+    .closeProc = ExpCloseProc,		/* Close proc. */
+    .inputProc = ExpInputProc,		/* Input proc. */
+    .outputProc = ExpOutputProc,	/* Output proc. */
+    .watchProc = ExpWatchProc,		/* Initialize notifier. */
+    .getHandleProc = ExpGetHandleProc	/* Get OS handles out of channel. */
 };
 
 typedef struct ThreadSpecificData {
@@ -436,10 +433,10 @@ ExpGetHandleProc(instanceData, direction, handlePtr)
     ExpState *esPtr = (ExpState *) instanceData;
 
     if (direction & TCL_WRITABLE) {
-	*handlePtr = (ClientData) esPtr->fdin;
+	*handlePtr = (ClientData)(intptr_t)esPtr->fdin;
     }
     if (direction & TCL_READABLE) {
-	*handlePtr = (ClientData) esPtr->fdin;
+	*handlePtr = (ClientData)(intptr_t)esPtr->fdin;
     } else {
 	return TCL_ERROR;
     }

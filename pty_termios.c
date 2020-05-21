@@ -63,6 +63,14 @@ with openpty which supports 4000 while ptmx supports 60. */
 #endif
 #include <sys/types.h>
 #include <sys/stat.h>
+#if defined(HAVE_OPENPTY)
+#include <termios.h>
+#if defined(HAVE_LIBUTIL_H)
+#include <libutil.h>
+#else
+#include <pty.h>
+#endif
+#endif
 
 #ifdef NO_STDLIB_H
 #include "../compat/stdlib.h"
@@ -102,6 +110,7 @@ with openpty which supports 4000 while ptmx supports 60. */
 #include "exp_tty_in.h"
 #include "exp_rename.h"
 #include "exp_pty.h"
+#include "exp_int.h"
 
 void expDiagLog();
 void expDiagLogPtr();
@@ -372,11 +381,14 @@ exp_init_pty()
 int
 exp_getptymaster()
 {
+#if !defined(HAVE_CONVEX_GETPTY) && !defined(HAVE_PTYM) && !defined(HAVE_SCO_CLIST_PTYS) && defined(TEST_PTY)
 	char *hex, *bank;
-	struct stat stat_buf;
+#endif
 	int master = -1;
 	int slave = -1;
+#ifdef HAVE_SCO_CLIST_PTYS
 	int num;
+#endif
 
 	exp_pty_error = 0;
 
@@ -429,6 +441,7 @@ exp_getptymaster()
 	master = open("/dev/ptc", O_RDWR);
 	if (master >= 0) {
 		int ptynum;
+		struct stat stat_buf;
 
 		if (fstat(master, &stat_buf) < 0) {
 			close(master);
@@ -635,8 +648,10 @@ exp_getptyslave(
     int ttyinit,
     CONST char *stty_args)
 {
-	int slave, slave2;
+	int slave;
+#if defined(HAVE_PTMX_BSD)
 	char buf[10240];
+#endif
 
 	if (0 > (slave = open(slave_name, O_RDWR))) {
 		static char buf[500];

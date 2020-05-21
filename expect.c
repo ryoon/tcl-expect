@@ -2537,7 +2537,7 @@ Exp_ExpectObjCmd(
     struct exp_state_list *state_list;	/* list of ExpStates to watch */
     struct exp_state_list *slPtr;	/* temp for interating over state_list */
     ExpState **esPtrs;
-    int mcount;			/* number of esPtrs to watch */
+    int mcount = 0;		/* number of esPtrs to watch */
 
     struct eval_out eo;		/* final case of interest */
 
@@ -2546,7 +2546,7 @@ Exp_ExpectObjCmd(
     time_t start_time_total;	/* time at beginning of this procedure */
     time_t start_time = 0;	/* time when restart label hit */
     time_t current_time = 0;	/* current time (when we last looked)*/
-    time_t end_time;		/* future time at which to give up */
+    time_t end_time = 0;	/* future time at which to give up */
 
     ExpState *last_esPtr;	/* for differentiating when multiple f's */
 				/* to print out better debugging messages */
@@ -2554,7 +2554,7 @@ Exp_ExpectObjCmd(
     int first_time = 1;		/* if not "restarted" */
     
     int key;			/* identify this expect command instance */
-    int configure_count;	/* monitor exp_configure_count */
+    int configure_count = 0;	/* monitor exp_configure_count */
 
     int timeout;		/* seconds */
     int remtime;		/* remaining time in timeout */
@@ -2947,12 +2947,14 @@ process_di (
 	} else {
 	    esPtr = expStateFromChannelName(interp,chan,0,0,0,(char*)cmd);
 	}
-	if (!esPtr) return(TCL_ERROR);
+	if (!esPtr)
+	    return(TCL_ERROR);
+
+	*esOut = esPtr;
     }
 
     *at = i;
     *Default = def;
-    *esOut = esPtr;
     return TCL_OK;
 }
 

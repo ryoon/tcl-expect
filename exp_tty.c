@@ -585,18 +585,20 @@ Exp_SystemCmd(
 	int total_len = 0, arg_len;
 
 	int stty_args_recognized = TRUE;
-	int cmd_is_stty = FALSE;
+	int cmd_is_stty;
 	int cooked = FALSE;
-	int was_raw, was_echo;
+	const char *was_raw = "-raw", *was_echo = "-echo";
 
 	if (argc == 1) return TCL_OK;
 
-	if (streq(argv[1],"stty")) {
+	cmd_is_stty = streq(argv[1],"stty");
+	if (cmd_is_stty) {
 		expDiagLogU("system stty is deprecated, use stty\r\n");
 
-		cmd_is_stty = TRUE;
-		was_raw = exp_israw();
-		was_echo = exp_isecho();
+		if (exp_israw())
+			was_raw++;
+		if (exp_isecho())
+			was_echo++;
 	}
 
 	if (argc > 2 && cmd_is_stty) {
@@ -635,11 +637,7 @@ Exp_SystemCmd(
 			    return(TCL_ERROR);
 			}
 			if (cmd_is_stty) {
-			    char buf [11];
-			    sprintf(buf,"%sraw %secho",
-				    (was_raw?"":"-"),
-				    (was_echo?"":"-"));
-			    Tcl_SetResult (interp, buf, TCL_VOLATILE);
+			    Tcl_AppendResult (interp, was_raw, " ", was_echo, NULL);
 			}
 			return(TCL_OK);
 		}
@@ -699,11 +697,7 @@ Exp_SystemCmd(
 	}
 
 	if (cmd_is_stty) {
-	    char buf [11];
-	    sprintf(buf,"%sraw %secho",
-		    (was_raw?"":"-"),
-		    (was_echo?"":"-"));
-	    Tcl_SetResult (interp, buf, TCL_VOLATILE);
+	    Tcl_AppendResult (interp, was_raw, " ", was_echo, NULL);
 	}
 
 /* following macros stolen from Tcl's tclUnix.h file */

@@ -90,6 +90,8 @@ expWriteBytesAndLogIfTtyU(esPtr,buf,lenChars)
 
     if (esPtr->valid)
 	wc = expWriteCharsUni(esPtr,buf,lenChars);
+    else
+	wc = -1;
 
     if (tsdPtr->logChannel && ((esPtr->fdout == 1) || expDevttyIs(esPtr))) {
       Tcl_DString ds;

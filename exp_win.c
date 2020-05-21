@@ -78,9 +78,9 @@ typedef struct {
 static exp_winsize winsize = {0, 0};
 static exp_winsize win2size = {0, 0};
 
-int exp_window_size_set(fd)
-int fd;
+int exp_window_size_set(int fd)
 {
+	return
 #ifdef TIOCSWINSZ
 	ioctl(fd,TIOCSWINSZ,&winsize);
 #endif
@@ -89,9 +89,9 @@ int fd;
 #endif
 }
 
-int exp_window_size_get(fd)
-int fd;
+int exp_window_size_get(int fd)
 {
+	return
 #ifdef TIOCGWINSZ
 	ioctl(fd,TIOCGWINSZ,&winsize);
 #endif
@@ -105,8 +105,7 @@ int fd;
 }
 
 void
-exp_win_rows_set(rows)
-char *rows;
+exp_win_rows_set(const char *rows)
 {
 	winsize.rows = atoi(rows);
 	exp_window_size_set(exp_dev_tty);
@@ -122,8 +121,7 @@ exp_win_rows_get()
 }
 
 void
-exp_win_columns_set(columns)
-char *columns;
+exp_win_columns_set(const char *columns)
 {
 	winsize.columns = atoi(columns);
 	exp_window_size_set(exp_dev_tty);
@@ -142,8 +140,8 @@ exp_win_columns_get()
  * separate copy of everything above - used for handling user stty requests
  */
 
-int exp_win2_size_set(fd)
-int fd;
+static void
+exp_win2_size_set(int fd)
 {
 #ifdef TIOCSWINSZ
 			ioctl(fd,TIOCSWINSZ,&win2size);
@@ -153,8 +151,8 @@ int fd;
 #endif
 }
 
-int exp_win2_size_get(fd)
-int fd;
+static void
+exp_win2_size_get(int fd)
 {
 #ifdef TIOCGWINSZ
 	ioctl(fd,TIOCGWINSZ,&win2size);
@@ -165,9 +163,7 @@ int fd;
 }
 
 void
-exp_win2_rows_set(fd,rows)
-int fd;
-char *rows;
+exp_win2_rows_set(int fd,const char *rows)
 {
 	exp_win2_size_get(fd);
 	win2size.rows = atoi(rows);
@@ -175,8 +171,7 @@ char *rows;
 }
 
 char*
-exp_win2_rows_get(fd)
-int fd;
+exp_win2_rows_get(int fd)
 {
     static char rows [20];
 	exp_win2_size_get(fd);
@@ -189,9 +184,7 @@ int fd;
 }
 
 void
-exp_win2_columns_set(fd,columns)
-int fd;
-char *columns;
+exp_win2_columns_set(int fd,const char *columns)
 {
 	exp_win2_size_get(fd);
 	win2size.columns = atoi(columns);
@@ -199,8 +192,7 @@ char *columns;
 }
 
 char*
-exp_win2_columns_get(fd)
-int fd;
+exp_win2_columns_get(int fd)
 {
     static char columns [20];
 	exp_win2_size_get(fd);

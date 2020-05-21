@@ -220,6 +220,8 @@ if test $openpty -eq 0 ; then
   ])
 fi
 
+AC_CHECK_HEADER(libutil.h,AC_DEFINE(HAVE_LIBUTIL_H))
+
 ######################################################################
 # End of library/func checking
 ######################################################################

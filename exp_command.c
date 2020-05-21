@@ -532,6 +532,13 @@ set_pgrp(int fd)
 }
 #endif
 
+/* ultrix (at least 4.1-2) fails to obtain controlling tty if setsid */
+/* is called.  setpgrp works though.  */
+#if defined(POSIX) && !defined(ultrix) || defined(__convex__)
+#define DO_SETSID
+#endif
+
+#if !defined(DO_SETSID) && (!defined(SYSV3) || defined(CRAY)) /* { */
 static
 void
 expSetpgrp()
@@ -548,7 +555,7 @@ expSetpgrp()
     (void) setpgrp(0,0);
 #endif
 }
-
+#endif /* } */
 
 /*ARGSUSED*/
 static void
@@ -581,9 +588,7 @@ Exp_SpawnObjCmd(
     ExpState *esPtr = 0;
     int slave;
     int pid;
-#ifdef TIOCNOTTY
-    /* tell Saber to ignore non-use of ttyfd */
-    /*SUPPRESS 591*/
+#if defined(TIOCNOTTY) && !defined(SYSV3) && !defined(DO_SETSID)
     int ttyfd;
 #endif /* TIOCNOTTY */
     int errorfd;	/* place to stash fileno(stderr) in child */
@@ -903,13 +908,17 @@ Exp_SpawnObjCmd(
 	    if (TCL_ERROR == Tcl_GetChannelHandle(channel, TCL_READABLE, &rfdc)) {
 		return TCL_ERROR;
 	    }
-	    rfd = (int)(long) rfdc;
+	    rfd = (int)(intptr_t) rfdc;
+	} else {
+	    rfd = -1;
 	}
 	if (mode & TCL_WRITABLE) {
 	    if (TCL_ERROR == Tcl_GetChannelHandle(channel, TCL_WRITABLE, &wfdc)) {
 		return TCL_ERROR;
 	    }
-	    wfd = (int)(long) wfdc;
+	    wfd = (int)(intptr_t) wfdc;
+	} else {
+	    wfd = -1;
 	}
 	master = ((mode & TCL_READABLE)?rfd:wfd);
 
@@ -1124,15 +1133,6 @@ Exp_SpawnObjCmd(
 
 #ifdef CRAY
     (void) close(master);
-#endif
-
-/* ultrix (at least 4.1-2) fails to obtain controlling tty if setsid */
-/* is called.  setpgrp works though.  */
-#if defined(POSIX) && !defined(ultrix)
-#define DO_SETSID
-#endif
-#ifdef __convex__
-#define DO_SETSID
 #endif
 
 #ifdef DO_SETSID
@@ -1976,7 +1976,7 @@ Exp_SendObjCmd(
 #define SEND_STYLE_BREAK	0x20
     int send_style = SEND_STYLE_PLAIN;
     int want_cooked = TRUE;
-    char *string;		/* string to send */
+    char *string = NULL;		/* string to send */
     int len = -1;		/* length of string to send */
     int zeros;		/* count of how many ascii zeros to send */
 
@@ -3114,9 +3114,7 @@ Exp_DisconnectObjCmd(
 {
     ThreadSpecificData *tsdPtr = TCL_TSD_INIT(&dataKey);
     
-#ifdef TIOCNOTTY
-    /* tell CenterLine to ignore non-use of ttyfd */
-    /*SUPPRESS 591*/
+#if defined(TIOCNOTTY) && !defined(SYSV3) && !defined(DO_SETSID)
     int ttyfd;
 #endif /* TIOCNOTTY */
 
