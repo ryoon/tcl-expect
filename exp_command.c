@@ -2535,7 +2535,7 @@ Exp_ConfigureObjCmd(
     /* Magic configuration stuff. */
     int i, opt, val;
 
-    static CONST84 char* options [] = {
+    static const char* options [] = {
 	"-strictwrite", NULL
     };
     enum options {
