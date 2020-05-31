@@ -1161,7 +1161,12 @@ Exp_SpawnObjCmd(
     /* if stty finds dev(stderr) != dev(stdout) */
 
     /* save error fd while we're setting up new one */
+#ifdef F_DUPFD_CLOEXEC
+    errorfd = fcntl(2,F_DUPFD_CLOEXEC,3);
+#else
     errorfd = fcntl(2,F_DUPFD,3);
+    fcntl(errorfd, F_SETFD, FD_CLOEXEC);
+#endif /* F_DUPFD_CLOXEC */
     /* and here is the macro to restore it */
 #define restore_error_fd {close(2);fcntl(errorfd,F_DUPFD,2);}
 
