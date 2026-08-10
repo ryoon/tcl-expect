@@ -454,7 +454,7 @@ AC_CHECK_FUNC(siglongjmp, AC_DEFINE(HAVE_SIGLONGJMP))
 # because Unixware 2.0 handles it specially and refuses to compile
 # autoconf's automatic test that is a call with no arguments
 AC_MSG_CHECKING([for memcpy])
-AC_TRY_LINK(,[
+AC_TRY_LINK([#include <string.h>],[
 char *s1, *s2;
 memcpy(s1,s2,0);
 ],
@@ -471,6 +471,7 @@ memcpy(s1,s2,0);
 AC_MSG_CHECKING([if WNOHANG requires _POSIX_SOURCE])
 AC_TRY_RUN([
 #include <sys/wait.h>
+int
 main() {
 #ifndef WNOHANG
 	return 0;
@@ -491,6 +492,7 @@ rm -rf wnohang
 AC_TRY_RUN([
 #include <stdio.h>
 #include <sys/wait.h>
+int
 main() {
 #ifdef WNOHANG
 	FILE *fp = fopen("wnohang","w");
@@ -529,32 +531,28 @@ else
   AC_DEFINE(SELECT_MASK_TYPE, fd_set)
 fi
 
-dnl # Check for the data type of the function used in signal(). This
-dnl # must be before the test for rearming.
-dnl # echo checking return type of signal handlers
-dnl AC_HEADER_EGREP([(void|sighandler_t).*signal], signal.h, retsigtype=void,AC_DEFINE(RETSIGTYPE, int) retsigtype=int)
-
 # FIXME: check if alarm exists
 AC_MSG_CHECKING([if signals need to be re-armed])
 AC_TRY_RUN([
 #include <signal.h>
-#define RETSIGTYPE $retsigtype
+#include <unistd.h>
+#include <sys/wait.h>
+#include <stdlib.h>
 
 int signal_rearms = 0;
 
 RETSIGTYPE
-child_sigint_handler(n)
-int n;
+child_sigint_handler(int n)
 {
 }
 
 RETSIGTYPE
-parent_sigint_handler(n)
-int n;
+parent_sigint_handler(int n)
 {
 signal_rearms++;
 }
 
+int
 main()
 {
 	signal(SIGINT,parent_sigint_handler);
@@ -716,6 +714,8 @@ fi
 AC_MSG_CHECKING([for struct sgttyb])
 AC_TRY_RUN([
 #include <sgtty.h>
+#include <stdlib.h>
+int
 main()
 {
   struct sgttyb tmp;
@@ -740,6 +740,7 @@ if test $mach -eq 0 ; then
   # pty_termios.c is set up to handle pty_termio.
   AC_MSG_CHECKING([for struct termio])
   AC_TRY_RUN([#include <termio.h>
+  int
   main()
   {
     struct termio tmp;
@@ -762,6 +763,8 @@ if test $mach -eq 0 ; then
 #  include <inttypes.h>
 #  endif
 #  include <termios.h>
+#  include <stdlib.h>
+  int
   main()
   {
     struct termios tmp;
@@ -784,6 +787,7 @@ AC_TRY_RUN([
 #include <inttypes.h>
 #endif
 #include <termios.h>
+int
 main() {
 #if defined(TCGETS) || defined(TCGETA)
 	return 0;
@@ -806,6 +810,7 @@ AC_TRY_RUN([
 #include <inttypes.h>
 #endif
 #include <termios.h>
+int
 main() {
 #ifdef TIOCGWINSZ
 	return 0;
@@ -825,6 +830,7 @@ main() {
 AC_MSG_CHECKING([for Cray-style ptys])
 SETUID=":"
 AC_TRY_RUN([
+int
 main(){
 #ifdef CRAY
 	return 0;
@@ -878,8 +884,11 @@ AC_FUNC_SETPGRP
 #
 AC_MSG_CHECKING([for SV-style timezone])
 AC_TRY_RUN([
+#include <stdlib.h>
+
 extern char *tzname[2];
 extern int daylight;
+int
 main()
 {
   int *x = &daylight;

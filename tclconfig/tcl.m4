@@ -2059,6 +2059,7 @@ int main() {
     if test $tcl_cv_api_serial = no ; then
 	AC_TRY_RUN([
 #include <sgtty.h>
+#include <stdlib.h>
 
 int main() {
     struct sgttyb t;
@@ -2397,7 +2398,8 @@ AC_DEFUN([TEA_TIME_HANDLER], [
     # (like convex) have timezone functions, etc.
     #
     AC_CACHE_CHECK([long timezone variable], tcl_cv_timezone_long, [
-	AC_TRY_COMPILE([#include <time.h>],
+	AC_TRY_COMPILE([#include <time.h>
+#include <stdlib.h>],
 	    [extern long timezone;
 	    timezone += 1;
 	    exit (0);],
