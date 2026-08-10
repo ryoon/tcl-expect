@@ -123,36 +123,6 @@ would appreciate credit if this program or parts of it are used.
 #endif
 
 /*
- * Definitions that allow Tcl functions with variable numbers of
- * arguments to be used with either varargs.h or stdarg.h.  TCL_VARARGS
- * is used in procedure prototypes.  TCL_VARARGS_DEF is used to declare
- * the arguments in a function definiton: it takes the type and name of
- * the first argument and supplies the appropriate argument declaration
- * string for use in the function definition.  TCL_VARARGS_START
- * initializes the va_list data structure and returns the first argument.
- */
-
-#if defined(__STDC__) || defined(HAS_STDARG)
-#   include <stdarg.h>
-
-#   define TCL_VARARGS(type, name) (type name, ...)
-#   define TCL_VARARGS_DEF(type, name) (type name, ...)
-#   define TCL_VARARGS_START(type, name, list) (va_start(list, name), name)
-#else
-#   include <varargs.h>
-
-#   ifdef __cplusplus
-#	define TCL_VARARGS(type, name) (type name, ...)
-#	define TCL_VARARGS_DEF(type, name) (type va_alist, ...)
-#   else
-#	define TCL_VARARGS(type, name) ()
-#	define TCL_VARARGS_DEF(type, name) (va_alist)
-#   endif
-#   define TCL_VARARGS_START(type, name, list) \
-	(va_start(list), va_arg(list, type))
-#endif
-
-/*
  * Macros used to declare a function to be exported by a DLL.
  * Used by Windows, maps to no-op declarations on non-Windows systems.
  * The default build on windows is for a DLL, which causes the DLLIMPORT
@@ -198,22 +168,6 @@ would appreciate credit if this program or parts of it are used.
 # else
 #  define TCL_STORAGE_CLASS DLLIMPORT
 # endif
-#endif
-
-/*
- * Definitions that allow this header file to be used either with or
- * without ANSI C features like function prototypes.  */
-
-#undef _ANSI_ARGS_
-#undef CONST
-
-#if ((defined(__STDC__) || defined(SABER)) && !defined(NO_PROTOTYPE)) || defined(__cplusplus) || defined(USE_PROTOTYPE)
-#   define _USING_PROTOTYPES_ 1
-#   define _ANSI_ARGS_(x)	x
-#   define CONST const
-#else
-#   define _ANSI_ARGS_(x)	()
-#   define CONST
 #endif
 
 #ifdef __cplusplus
@@ -318,11 +272,11 @@ typedef struct regexp {
 	char program[1];	/* Unwarranted chumminess with compiler. */
 } regexp;
 
-EXTERN regexp *TclRegComp _ANSI_ARGS_((char *exp));
-EXTERN int TclRegExec _ANSI_ARGS_((regexp *prog, char *string, char *start));
-EXTERN void TclRegSub _ANSI_ARGS_((regexp *prog, char *source, char *dest));
-EXTERN void exp_TclRegError _ANSI_ARGS_((char *msg));
-EXTERN char *TclGetRegError _ANSI_ARGS_((void));
+EXTERN regexp *TclRegComp (char *exp);
+EXTERN int TclRegExec (regexp *prog, char *string, char *start);
+EXTERN void TclRegSub (regexp *prog, char *source, char *dest);
+EXTERN void exp_TclRegError (char *msg);
+EXTERN char *TclGetRegError (void);
 
 # undef TCL_STORAGE_CLASS
 # define TCL_STORAGE_CLASS DLLIMPORT
@@ -392,27 +346,27 @@ EXTERN int exp_is_debugging;
 EXTERN int exp_loguser;
 
 EXTERN void (*exp_close_in_child)();	/* procedure to close files in child */
-EXTERN void exp_slave_control _ANSI_ARGS_((int,int));
+EXTERN void exp_slave_control (int,int);
 EXTERN int exp_logfile_all;
 EXTERN FILE *exp_debugfile;
 EXTERN FILE *exp_logfile;
-extern void exp_debuglog _ANSI_ARGS_(TCL_VARARGS(char *,fmt));
-extern void exp_errorlog _ANSI_ARGS_(TCL_VARARGS(char *,fmt));
+extern void exp_debuglog (char * fmt,...);
+extern void exp_errorlog (char * fmt,...);
 
-EXTERN int exp_disconnect _ANSI_ARGS_((void));
-EXTERN FILE *exp_popen	_ANSI_ARGS_((char *command));
-EXTERN void (*exp_child_exec_prelude) _ANSI_ARGS_((void));
+EXTERN int exp_disconnect (void);
+EXTERN FILE *exp_popen	(char *command);
+EXTERN void (*exp_child_exec_prelude) (void);
 
 #ifndef EXP_DEFINE_FNS
-EXTERN int exp_spawnl	_ANSI_ARGS_(TCL_VARARGS(char *,file));
-EXTERN int exp_expectl	_ANSI_ARGS_(TCL_VARARGS(int,fd));
-EXTERN int exp_fexpectl	_ANSI_ARGS_(TCL_VARARGS(FILE *,fp));
+EXTERN int exp_spawnl	(char * file,...);
+EXTERN int exp_expectl	(int fd,...);
+EXTERN int exp_fexpectl	(FILE * fp,...);
 #endif
 
-EXTERN int exp_spawnv	_ANSI_ARGS_((char *file, char *argv[]));
-EXTERN int exp_expectv	_ANSI_ARGS_((int fd, struct exp_case *cases));
-EXTERN int exp_fexpectv	_ANSI_ARGS_((FILE *fp, struct exp_case *cases));
+EXTERN int exp_spawnv	(char *file, char *argv[]);
+EXTERN int exp_expectv	(int fd, struct exp_case *cases);
+EXTERN int exp_fexpectv	(FILE *fp, struct exp_case *cases);
 
-EXTERN int exp_spawnfd	_ANSI_ARGS_((int fd));
+EXTERN int exp_spawnfd	(int fd);
 
 #endif /* _EXPECT_H */

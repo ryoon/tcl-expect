@@ -37,20 +37,20 @@
 #include "exp_event.h"
 #include "tcldbg.h" /* Dbg_StdinMode */
 
-extern int		expSetBlockModeProc _ANSI_ARGS_((int fd, int mode));
-static int		ExpBlockModeProc _ANSI_ARGS_((ClientData instanceData,
-			    int mode));
-static int		ExpCloseProc _ANSI_ARGS_((ClientData instanceData,
-			    Tcl_Interp *interp));
-static int		ExpInputProc _ANSI_ARGS_((ClientData instanceData,
-		            char *buf, int toRead, int *errorCode));
-static int		ExpOutputProc _ANSI_ARGS_((
+extern int		expSetBlockModeProc (int fd, int mode);
+static int		ExpBlockModeProc (ClientData instanceData,
+			    int mode);
+static int		ExpCloseProc (ClientData instanceData,
+			    Tcl_Interp *interp);
+static int		ExpInputProc (ClientData instanceData,
+		            char *buf, int toRead, int *errorCode);
+static int		ExpOutputProc (
 			    ClientData instanceData, char *buf, int toWrite,
-                            int *errorCode));
-static void		ExpWatchProc _ANSI_ARGS_((ClientData instanceData,
-		            int mask));
-static int		ExpGetHandleProc _ANSI_ARGS_((ClientData instanceData,
-		            int direction, ClientData *handlePtr));
+                            int *errorCode);
+static void		ExpWatchProc (ClientData instanceData,
+		            int mask);
+static int		ExpGetHandleProc (ClientData instanceData,
+		            int direction, ClientData *handlePtr);
 
 /*
  * This structure describes the channel type structure for Expect-based IO:
@@ -58,11 +58,11 @@ static int		ExpGetHandleProc _ANSI_ARGS_((ClientData instanceData,
 
 Tcl_ChannelType expChannelType = {
     .typeName = "exp",			/* Type name. */
-    .version = TCL_CHANNEL_VERSION_2,
+    .version = TCL_CHANNEL_VERSION_5,
     .blockModeProc = ExpBlockModeProc,	/* Set blocking/nonblocking mode.*/
     .closeProc = ExpCloseProc,		/* Close proc. */
     .inputProc = ExpInputProc,		/* Input proc. */
-    .outputProc = ExpOutputProc,	/* Output proc. */
+    .outputProc = (int (*)(void *, const char *, int,  int *))ExpOutputProc,	/* Output proc. */
     .watchProc = ExpWatchProc,		/* Initialize notifier. */
     .getHandleProc = ExpGetHandleProc	/* Get OS handles out of channel. */
 };

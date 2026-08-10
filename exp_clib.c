@@ -7,6 +7,7 @@ dollars.  Therefore it is public domain.  However, the author and NIST
 would appreciate credit if this program or parts of it are used.
 */
 
+#include <stdarg.h>
 #include "expect_cf.h"
 #include <stdio.h>
 #include <setjmp.h>
@@ -88,25 +89,25 @@ would appreciate credit if this program or parts of it are used.
 #ifndef _STDLIB
 #define _STDLIB
 
-extern void		abort _ANSI_ARGS_((void));
-extern double		atof _ANSI_ARGS_((CONST char *string));
-extern int		atoi _ANSI_ARGS_((CONST char *string));
-extern long		atol _ANSI_ARGS_((CONST char *string));
-extern char *		calloc _ANSI_ARGS_((unsigned int numElements,
-			    unsigned int size));
-extern void		exit _ANSI_ARGS_((int status));
-extern int		free _ANSI_ARGS_((char *blockPtr));
-extern char *		getenv _ANSI_ARGS_((CONST char *name));
-extern char *		malloc _ANSI_ARGS_((unsigned int numBytes));
-extern void		qsort _ANSI_ARGS_((VOID *base, int n, int size,
-			    int (*compar)(CONST VOID *element1, CONST VOID
-			    *element2)));
-extern char *		realloc _ANSI_ARGS_((char *ptr, unsigned int numBytes));
-extern double		strtod _ANSI_ARGS_((CONST char *string, char **endPtr));
-extern long		strtol _ANSI_ARGS_((CONST char *string, char **endPtr,
-			    int base));
-extern unsigned long	strtoul _ANSI_ARGS_((CONST char *string,
-			    char **endPtr, int base));
+extern void		abort (void);
+extern double		atof (const char *string);
+extern int		atoi (const char *string);
+extern long		atol (const char *string);
+extern char *		calloc (unsigned int numElements,
+			    unsigned int size);
+extern void		exit (int status);
+extern int		free (char *blockPtr);
+extern char *		getenv (const char *name);
+extern char *		malloc (unsigned int numBytes);
+extern void		qsort (VOID *base, int n, int size,
+			    int (*compar)(const VOID *element1, const VOID
+			    *element2));
+extern char *		realloc (char *ptr, unsigned int numBytes);
+extern double		strtod (const char *string, char **endPtr);
+extern long		strtol (const char *string, char **endPtr,
+			    int base);
+extern unsigned long	strtoul (const char *string,
+			    char **endPtr, int base);
 
 #endif /* _STDLIB */
 
@@ -328,26 +329,26 @@ static char regdummy;
  * Forward declarations for TclRegComp()'s friends.
  */
 
-static char *		reg _ANSI_ARGS_((int paren, int *flagp,
-			    struct regcomp_state *rcstate));
-static char *		regatom _ANSI_ARGS_((int *flagp,
-			    struct regcomp_state *rcstate));
-static char *		regbranch _ANSI_ARGS_((int *flagp,
-			    struct regcomp_state *rcstate));
-static void		regc _ANSI_ARGS_((int b,
-			    struct regcomp_state *rcstate));
-static void		reginsert _ANSI_ARGS_((int op, char *opnd,
-			    struct regcomp_state *rcstate));
-static char *		regnext _ANSI_ARGS_((char *p));
-static char *		regnode _ANSI_ARGS_((int op,
-			    struct regcomp_state *rcstate));
-static void 		regoptail _ANSI_ARGS_((char *p, char *val));
-static char *		regpiece _ANSI_ARGS_((int *flagp,
-			    struct regcomp_state *rcstate));
-static void 		regtail _ANSI_ARGS_((char *p, char *val));
+static char *		reg (int paren, int *flagp,
+			    struct regcomp_state *rcstate);
+static char *		regatom (int *flagp,
+			    struct regcomp_state *rcstate);
+static char *		regbranch (int *flagp,
+			    struct regcomp_state *rcstate);
+static void		regc (int b,
+			    struct regcomp_state *rcstate);
+static void		reginsert (int op, char *opnd,
+			    struct regcomp_state *rcstate);
+static char *		regnext (char *p);
+static char *		regnode (int op,
+			    struct regcomp_state *rcstate);
+static void 		regoptail (char *p, char *val);
+static char *		regpiece (int *flagp,
+			    struct regcomp_state *rcstate);
+static void 		regtail (char *p, char *val);
 
 #ifdef STRCSPN
-static int strcspn _ANSI_ARGS_((char *s1, char *s2));
+static int strcspn (char *s1, char *s2);
 #endif
 
 /*
@@ -877,17 +878,17 @@ struct regexec_state  {
 /*
  * Forwards.
  */
-static int 		regtry _ANSI_ARGS_((regexp *prog, char *string,
-			    struct regexec_state *restate));
-static int 		regmatch _ANSI_ARGS_((char *prog,
-			    struct regexec_state *restate));
-static int 		regrepeat _ANSI_ARGS_((char *p,
-			    struct regexec_state *restate));
+static int 		regtry (regexp *prog, char *string,
+			    struct regexec_state *restate);
+static int 		regmatch (char *prog,
+			    struct regexec_state *restate);
+static int 		regrepeat (char *p,
+			    struct regexec_state *restate);
 
 #ifdef DEBUG
 int regnarrate = 0;
-void regdump _ANSI_ARGS_((regexp *r));
-static char *regprop _ANSI_ARGS_((char *op));
+void regdump (regexp *r);
+static char *regprop (char *op);
 #endif
 
 /*
@@ -1873,7 +1874,7 @@ char *argv[];	/* some compiler complains about **argv? */
 		 * (line 512) does not generate a warning !
 		 */
 
-		expErrnoMsgSet(Tcl_ErrnoMsg);
+		expErrnoMsgSet((char * (*)(int))Tcl_ErrnoMsg);
 	}
 
 	if (!file || !argv) sysreturn(EINVAL);
@@ -2241,7 +2242,7 @@ when trapping, see below in child half of fork */
 /* returns fd of master side of pty */
 /*VARARGS*/
 int
-exp_spawnl TCL_VARARGS_DEF(char *,arg1)
+exp_spawnl (char * arg1,...)
 /*exp_spawnl(va_alist)*/
 /*va_dcl*/
 {
@@ -2249,7 +2250,7 @@ exp_spawnl TCL_VARARGS_DEF(char *,arg1)
 	int i;
 	char *arg, **argv;
 
-	arg = TCL_VARARGS_START(char *,arg1,args);
+	va_start(args,arg1);
 	/*va_start(args);*/
 	for (i=1;;i++) {
 		arg = va_arg(args,char *);
@@ -2258,7 +2259,7 @@ exp_spawnl TCL_VARARGS_DEF(char *,arg1)
 	va_end(args);
 	if (i == 0) sysreturn(EINVAL);
 	if (!(argv = (char **)malloc((i+1)*sizeof(char *)))) sysreturn(ENOMEM);
-	argv[0] = TCL_VARARGS_START(char *,arg1,args);
+	va_start(args,arg1);
 	/*va_start(args);*/
 	for (i=1;;i++) {
 		argv[i] = va_arg(args,char *);
@@ -2716,7 +2717,7 @@ struct exp_case *ecases;
 
 /*VARARGS*/
 int
-exp_expectl TCL_VARARGS_DEF(int,arg1)
+exp_expectl (int arg1,...)
 /*exp_expectl(va_alist)*/
 /*va_dcl*/
 {
@@ -2726,7 +2727,7 @@ exp_expectl TCL_VARARGS_DEF(int,arg1)
 	int i;
 	enum exp_type type;
 
-	fd = TCL_VARARGS_START(int,arg1,args);
+	va_start(args,arg1);
 	/* va_start(args);*/
 	/* fd = va_arg(args,int);*/
 	/* first just count the arg sets */
@@ -2753,9 +2754,10 @@ exp_expectl TCL_VARARGS_DEF(int,arg1)
 		sysreturn(ENOMEM);
 
 	/* now set up the actual cases */
-	fd = TCL_VARARGS_START(int,arg1,args);
+	va_start(args,arg1);
 	/*va_start(args);*/
 	/*va_arg(args,int);*/		/*COMPUTED BUT NOT USED*/
+        fd = va_arg(args,int);
 	for (ec=ecases;;ec++) {
 		ec->type = va_arg(args,enum exp_type);
 		if (ec->type == exp_end) break;
@@ -2781,7 +2783,7 @@ exp_expectl TCL_VARARGS_DEF(int,arg1)
 }
 
 int
-exp_fexpectl TCL_VARARGS_DEF(FILE *,arg1)
+exp_fexpectl (FILE * arg1,...)
 /*exp_fexpectl(va_alist)*/
 /*va_dcl*/
 {
@@ -2791,7 +2793,7 @@ exp_fexpectl TCL_VARARGS_DEF(FILE *,arg1)
 	int i;
 	enum exp_type type;
 
-	fp = TCL_VARARGS_START(FILE *,arg1,args);
+	va_start(args,arg1);
 	/*va_start(args);*/
 	/*fp = va_arg(args,FILE *);*/
 	/* first just count the arg-pairs */
@@ -2821,8 +2823,8 @@ exp_fexpectl TCL_VARARGS_DEF(FILE *,arg1)
 	va_start(args);
 	va_arg(args,FILE *);		/*COMPUTED, BUT NOT USED*/
 #endif
-	(void) TCL_VARARGS_START(FILE *,arg1,args);
-
+	(void) va_start(args,arg1);
+        fp = va_arg(args,FILE *);
 	for (ec=ecases;;ec++) {
 		ec->type = va_arg(args,enum exp_type);
 		if (ec->type == exp_end) break;
@@ -2911,12 +2913,13 @@ exp_disconnect()
 /* use this function for recording unusual things in the log */
 /*VARARGS*/
 void
-exp_debuglog TCL_VARARGS_DEF(char *,arg1)
+exp_debuglog (char * arg1,...)
 {
     char *fmt;
     va_list args;
 
-    fmt = TCL_VARARGS_START(char *,arg1,args);
+    va_start(args,arg1);
+    fmt = va_arg(args,char *);
     if (exp_debugfile) vfprintf(exp_debugfile,fmt,args);
     if (exp_is_debugging) {
 	vfprintf(stderr,fmt,args);
@@ -2932,12 +2935,13 @@ exp_debuglog TCL_VARARGS_DEF(char *,arg1)
 /* use this function for error conditions */
 /*VARARGS*/
 void
-exp_errorlog TCL_VARARGS_DEF(char *,arg1)
+exp_errorlog (char * arg1,...)
 {
     char *fmt;
     va_list args;
     
-    fmt = TCL_VARARGS_START(char *,arg1,args);
+    va_start(args,arg1);
+    fmt = va_arg(args,char *);
     vfprintf(stderr,fmt,args);
     if (exp_debugfile) vfprintf(exp_debugfile,fmt,args);
     if (exp_logfile) vfprintf(exp_logfile,fmt,args);

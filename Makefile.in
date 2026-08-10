@@ -122,7 +122,7 @@ includedir	= @includedir@
 
 DESTDIR		=
 
-PKG_DIR		= $(PACKAGE_NAME)$(PACKAGE_VERSION)
+TCL_PKG_DIR	= $(PACKAGE_NAME)$(PACKAGE_VERSION)
 pkgdatadir	= $(datadir)
 pkglibdir	= $(libdir)
 pkgincludedir	= $(includedir)
@@ -347,13 +347,13 @@ pkgIndex.tcl-hand:
 #========================================================================
 
 TAR		= tar
-#COMPRESS	= tar cvf $(PKG_DIR).tar $(PKG_DIR); compress $(PKG_DIR).tar
-COMPRESS	= $(TAR) zcvf $(PKG_DIR).tar.gz $(PKG_DIR)
+#COMPRESS	= tar cvf $(TCL_PKG_DIR).tar $(TCL_PKG_DIR); compress $(TCL_PKG_DIR).tar
+COMPRESS	= $(TAR) zcvf $(TCL_PKG_DIR).tar.gz $(TCL_PKG_DIR)
 DIST_ROOT	= /tmp/dist
-DIST_DIR	= $(DIST_ROOT)/$(PKG_DIR)
+DIST_DIR	= $(DIST_ROOT)/$(TCL_PKG_DIR)
 
 dist-clean:
-	rm -rf $(DIST_DIR) $(DIST_ROOT)/$(PKG_DIR).tar.*
+	rm -rf $(DIST_DIR) $(DIST_ROOT)/$(TCL_PKG_DIR).tar.*
 
 dist: dist-clean doc
 	mkdir -p $(DIST_DIR)
@@ -384,7 +384,7 @@ dist: dist-clean doc
 	    fi; \
 	done
 	(cd $(DIST_ROOT); $(COMPRESS);)
-	cp $(DIST_ROOT)/$(PKG_DIR).tar.gz $(top_builddir)
+	cp $(DIST_ROOT)/$(TCL_PKG_DIR).tar.gz $(top_builddir)
 
 $(SCRIPTS):
 	$(TCLSH) $(srcdir)/fixline1 $(SHORT_BINDIR) < $(srcdir)/example/$@ > $@

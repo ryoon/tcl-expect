@@ -46,7 +46,7 @@ static Tcl_ThreadDataKey dataKey;
  */
 static char bigbuf[2000];
 
-static void expDiagWriteCharsUni _ANSI_ARGS_((Tcl_UniChar *str,int len));
+static void expDiagWriteCharsUni (Tcl_UniChar *str,int len);
 
 /*
  * Following this are several functions that log the conversation.  Some
@@ -166,14 +166,14 @@ expLogInteractionU(esPtr,buf,buflen)
 #define LOGUSER		(tsdPtr->logUser || force_stdout)
 /*VARARGS*/
 void
-expStdoutLog TCL_VARARGS_DEF(int,arg1)
+expStdoutLog (int arg1,...)
 {
     ThreadSpecificData *tsdPtr = TCL_TSD_INIT(&dataKey);
     int force_stdout;
     char *fmt;
     va_list args;
 
-    force_stdout = TCL_VARARGS_START(int,arg1,args);
+    va_start(args,arg1);
     fmt = va_arg(args,char *);
 
     if ((!tsdPtr->logUser) && (!force_stdout) && (!tsdPtr->logAll)) return;
@@ -216,14 +216,14 @@ int force_stdout;	/* override value of logUser */
 /* use this function for error conditions */
 /*VARARGS*/
 void
-expErrorLog TCL_VARARGS_DEF(char *,arg1)
+expErrorLog (char * arg1,...)
 {
     ThreadSpecificData *tsdPtr = TCL_TSD_INIT(&dataKey);
 
     char *fmt;
     va_list args;
 
-    fmt = TCL_VARARGS_START(char *,arg1,args);
+    va_start(args,arg1);
     (void) vsprintf(bigbuf,fmt,args);
 
     expDiagWriteChars(bigbuf,-1);
@@ -255,7 +255,7 @@ char *buf;
 /* use this function for recording unusual things in the log */
 /*VARARGS*/
 void
-expDiagLog TCL_VARARGS_DEF(char *,arg1)
+expDiagLog (char * arg1,...)
 {
     char *fmt;
     va_list args;
@@ -264,8 +264,8 @@ expDiagLog TCL_VARARGS_DEF(char *,arg1)
 
     if ((tsdPtr->diagToStderr == 0) && (tsdPtr->diagChannel == 0)) return;
 
-    fmt = TCL_VARARGS_START(char *,arg1,args);
-
+    va_start(args,arg1);
+    fmt = va_arg(args,char *);
     (void) vsprintf(bigbuf,fmt,args);
 
     expDiagWriteBytes(bigbuf,-1);
@@ -301,14 +301,14 @@ char *str;
 
 /*VARARGS*/
 void
-expPrintf TCL_VARARGS_DEF(char *,arg1)
+expPrintf (char * arg1,...)
 {
   char *fmt;
   va_list args;
   char bigbuf[2000];
   int len, rc;
 
-  fmt = TCL_VARARGS_START(char *,arg1,args);
+  va_start(args,arg1);
   len = vsprintf(bigbuf,fmt,args);
  retry:
   rc = write(2,bigbuf,len);

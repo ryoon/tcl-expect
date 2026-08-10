@@ -8,6 +8,7 @@ would appreciate credit if this program or parts of it are used.
 #ifndef __EXP_TTY_H__
 #define __EXP_TTY_H__
 
+#include <tcl.h>
 #include "expect_cf.h"
 
 extern int exp_dev_tty;

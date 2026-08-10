@@ -77,6 +77,11 @@ AC_DEFUN([TEA_PATH_TCLCONFIG], [
 		fi
 	    fi
 
+#	    PKG_PROG_PKG_CONFIG
+	    PKG_CHECK_MODULES([tcl], [tcl],
+		[TCL_LIBDIR=`$PKG_CONFIG --variable=libdir tcl`])
+	    ac_cv_c_tclconfig=$TCL_LIBDIR
+
 	    # then check for a private Tcl installation
 	    if test x"${ac_cv_c_tclconfig}" = x ; then
 		for i in \
@@ -3230,7 +3235,7 @@ print("manifest needed")
     fi
 
     if test "${SHARED_BUILD}" = "1" ; then
-	MAKE_LIB="${MAKE_SHARED_LIB} "
+	MAKE_LIB="${MAKE_SHARED_LIB} ${tcl_LIBS} "
     else
 	MAKE_LIB="${MAKE_STATIC_LIB} "
     fi

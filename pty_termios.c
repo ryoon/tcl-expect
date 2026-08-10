@@ -648,7 +648,7 @@ int
 exp_getptyslave(
     int ttycopy,
     int ttyinit,
-    CONST char *stty_args)
+    const char *stty_args)
 {
 	int slave;
 #if defined(HAVE_PTMX_BSD)

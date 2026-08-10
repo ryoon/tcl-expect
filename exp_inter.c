@@ -696,8 +696,8 @@ static char *
 inter_updateproc(
     ClientData clientData,
     Tcl_Interp *interp,	/* Interpreter containing variable. */
-    char *name1,	/* Name of variable. */
-    char *name2,	/* Second part of variable name. */
+    const char *name1,	/* Name of variable. */
+    const char *name2,	/* Second part of variable name. */
     int flags)		/* Information about what happened. */
 {
 	exp_configure_count++;
@@ -711,12 +711,16 @@ int
 Exp_InteractObjCmd(
     ClientData clientData,
     Tcl_Interp *interp,
+#if TCL_MAJOR_VERSION >= 9
+    Tcl_Size objc,
+#else
     int objc,
-    Tcl_Obj *CONST initial_objv[])		/* Argument objects. */
+#endif
+    Tcl_Obj *const initial_objv[])		/* Argument objects. */
 {
     ThreadSpecificData *tsdPtr = TCL_TSD_INIT(&dataKey);
 
-    Tcl_Obj *CONST *objv_copy;	/* original, for error messages */
+    Tcl_Obj *const *objv_copy;	/* original, for error messages */
     Tcl_Obj **objv = (Tcl_Obj **) initial_objv;
     char *string;
     Tcl_UniChar *ustring;

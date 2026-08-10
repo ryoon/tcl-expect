@@ -4,6 +4,8 @@
 
 builtin(include,tclconfig/tcl.m4)
 
+m4_include([m4/pkg.m4])
+
 #
 # Add here whatever m4 macros you want to define for your package
 #

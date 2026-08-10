@@ -158,7 +158,7 @@ Tcl_Interp *interp;
        maintain our own static version */
 
     static int nextid = 0;
-    CONST char *nextidstr = Tcl_GetVar2(interp,"tcl::history","nextid",0);
+    char *nextidstr = Tcl_GetVar2(interp,"tcl::history","nextid",0);
     if (nextidstr) {
 	/* intentionally ignore failure */
 	(void) sscanf(nextidstr,"%d",&nextid);
@@ -179,7 +179,7 @@ Exp_Prompt1ObjCmd(clientData, interp, objc, objv)
 ClientData clientData;
 Tcl_Interp *interp;
 int objc;
-Tcl_Obj *CONST objv[];		/* Argument objects. */
+Tcl_Obj *const objv[];		/* Argument objects. */
 {
     static char buffer[200];
 
@@ -196,7 +196,7 @@ Exp_Prompt2ObjCmd(clientData, interp, objc, objv)
 ClientData clientData;
 Tcl_Interp *interp;
 int objc;
-Tcl_Obj *CONST objv[];
+Tcl_Obj *const objv[];
 {
     Tcl_SetResult(interp,prompt2_default,TCL_STATIC);
     return(TCL_OK);
@@ -252,7 +252,13 @@ int check_for_nostack;
 	/* no \n at end, since ccmd will already have one. */
 	/* Actually, this is not true if command is last in */
 	/* file and has no newline after it, oh well */
-	expErrorLogU(exp_cook(msg,(int *)0));
+	expErrorLogU(exp_cook(msg,
+#if TCL_MAJOR_VERSION >= 9
+		(Tcl_Size *)0)
+#else
+		(int *)0)
+#endif
+	);
 	expErrorLogU("\r\n");
 }
 
@@ -393,7 +399,13 @@ Tcl_Obj *eofObj;
 	    case TCL_OK:
 	        str = Tcl_GetStringResult(interp);
 		if (*str != 0) {
-		    expStdoutLogU(exp_cook(str,(int *)0),1);
+		    expStdoutLogU(exp_cook(str,
+#if TCL_MAJOR_VERSION >= 9
+			(Tcl_Size *)0
+#else
+			(int *)0
+#endif
+			),1);
 		    expStdoutLogU("\r\n",1);
 		}
 		continue;
@@ -432,7 +444,7 @@ Exp_ExpVersionObjCmd(clientData, interp, objc, objv)
 ClientData clientData;
 Tcl_Interp *interp;
      int objc;
-     Tcl_Obj *CONST objv[];		/* Argument objects. */
+     Tcl_Obj *const objv[];		/* Argument objects. */
 {
 	int emajor, umajor;
 	char *user_version;	/* user-supplied version string */
@@ -599,7 +611,7 @@ Tcl_Interp *interp;
 	expDiagInit();
 	expLogInit();
 	expDiagLogPtrSet(expDiagLogU);
-	expErrnoMsgSet(Tcl_ErrnoMsg);
+	expErrnoMsgSet((char * (*) (int))Tcl_ErrnoMsg);
 
 	Tcl_CreateExitHandler(exp_exit_handlers,(ClientData)interp);
 
@@ -712,7 +724,13 @@ char **argv;
 			exp_cmdlinecmds = TRUE;
 			rc = Tcl_Eval(interp,optarg);
 			if (rc != TCL_OK) {
-			    expErrorLogU(exp_cook(Tcl_GetVar(interp,"errorInfo",TCL_GLOBAL_ONLY),(int *)0));
+			    expErrorLogU(exp_cook(Tcl_GetVar(interp,"errorInfo",TCL_GLOBAL_ONLY),
+#if TCL_MAJOR_VERSION >= 9
+				(Tcl_Size *)0
+#else
+				(int *)0
+#endif
+				));
 			    expErrorLogU("\r\n");
 			}
 			break;
@@ -815,7 +833,7 @@ char **argv;
 					exp_cmdfilename = 0;
 					expCloseOnExec(fileno(exp_cmdfile));
 				} else {
-					CONST char *msg;
+					const char *msg;
 
 					if (errno == 0) {
 						msg = "could not read - odd file name?";
@@ -860,7 +878,7 @@ char **argv;
 		expDiagLog("set argv0 \"%s\"\r\n",exp_argv0);
 	}
 
-	args = Tcl_Merge(argc-optind,argv+optind);
+	args = Tcl_Merge(argc-optind,(const char **)(argv+optind));
 	expDiagLogU("set argv \"");
 	expDiagLogU(args);
 	expDiagLogU("\"\r\n");

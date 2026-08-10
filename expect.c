@@ -55,9 +55,9 @@ int exp_default_close_on_eof =  TRUE;
 #define EXPECT_TIMEOUT		"timeout"
 #define EXPECT_OUT		"expect_out"
 
-extern int Exp_StringCaseMatch _ANSI_ARGS_((Tcl_UniChar *string, int strlen,
+extern int Exp_StringCaseMatch (Tcl_UniChar *string, int strlen,
 					    Tcl_UniChar *pattern,int plen,
-					    int nocase,int *offset));
+					    int nocase,int *offset);
 
 typedef struct ThreadSpecificData {
     int timeout;
@@ -163,8 +163,8 @@ static char *exp_indirect_update1( /* 1-part Tcl variable names */
 static char *exp_indirect_update2( /* 2-part Tcl variable names */
     ClientData clientData,
     Tcl_Interp *interp,	/* Interpreter containing variable. */
-    char *name1,	/* Name of variable. */
-    char *name2,	/* Second part of variable name. */
+    const char *name1,	/* Name of variable. */
+    const char *name2,	/* Second part of variable name. */
     int flags);		/* Information about what happened. */
 
 #ifdef SIMPLE_EVENT
@@ -276,15 +276,20 @@ Tcl_Obj*
 exp_eval_with_one_arg(
     ClientData clientData,
     Tcl_Interp *interp,
-    Tcl_Obj *CONST objv[])		/* Argument objects. */
+    Tcl_Obj *const objv[])		/* Argument objects. */
 {
     Tcl_Obj* res = Tcl_NewListObj (1,objv);
 
 #define NUM_STATIC_OBJS 20
     Tcl_Token *tokenPtr;
-    CONST char *p;
-    CONST char *next;
-    int bytesLeft, numWords;
+    const char *p;
+    const char *next;
+    int numWords;
+#if TCL_MAJOR_VERSION >= 9
+    Tcl_Size bytesLeft;
+#else
+    int bytesLeft;
+#endif
     Tcl_Parse parse;
 
     /*
@@ -323,8 +328,16 @@ exp_eval_with_one_arg(
 		 numWords--, tokenPtr += (tokenPtr->numComponents + 1)) {
 		/* FUTURE: Save token information, do substitution later */
 
-		Tcl_Obj* w = Tcl_EvalTokens(interp, tokenPtr+1,
-			tokenPtr->numComponents);
+		Tcl_Obj* w;
+
+		if (Tcl_EvalTokensStandard(interp, tokenPtr+1,
+			tokenPtr->numComponents) != TCL_OK) {
+			w = NULL;
+		}
+		w = Tcl_GetObjResult(interp);
+		Tcl_IncrRefCount(w);
+		Tcl_ResetResult(interp);
+
 		/* w has refCount 1 here, if not NULL */
 		if (w == NULL) {
 		    Tcl_DecrRefCount (res);
@@ -407,7 +420,7 @@ parse_expect_args(
     struct exp_cmd_descriptor *eg,
     ExpState *default_esPtr,	/* suggested ExpState if called as expect_user or _tty */
     int objc,
-    Tcl_Obj *CONST objv[])		/* Argument objects. */
+    Tcl_Obj *const objv[])		/* Argument objects. */
 {
     int i;
     char *string;
@@ -488,7 +501,11 @@ parse_expect_args(
 		{
 		    Tcl_Obj* g;
 		    Tcl_UniChar* str;
+#if TCL_MAJOR_VERSION >= 9
+		    Tcl_Size strlen;
+#else
 		    int strlen;
+#endif
 
 		    str = Tcl_GetUnicodeFromObj (objv[i], &strlen);
 		    g = exp_retoglob (str, strlen);
@@ -850,7 +867,11 @@ eval_case_string(
 	expDiagLog("\"? ");
 
 	if (e->gate) {
+#if TCL_MAJOR_VERSION >= 9
+	    Tcl_Size plen;
+#else
 	    int plen;
+#endif
 	    Tcl_UniChar* pat = Tcl_GetUnicodeFromObj(e->gate,&plen);
 
 	    expDiagLog("Gate \"");
@@ -913,7 +934,11 @@ eval_case_string(
 	expDiagLogU(expPrintify(Tcl_GetString(e->pat)));
 	expDiagLog("\"? ");
 	if (str) {
+#if TCL_MAJOR_VERSION >= 9
+	    Tcl_Size plen;
+#else
 	    int plen;
+#endif
 	    Tcl_UniChar* pat = Tcl_GetUnicodeFromObj(e->pat,&plen);
 
 	    match = Exp_StringCaseMatch(str,numchars, pat, plen,
@@ -930,7 +955,11 @@ eval_case_string(
 	}
 	expDiagLogU(no);
     } else if (e->use == PAT_EXACT) {
+#if TCL_MAJOR_VERSION >= 9
+	Tcl_Size patLength;
+#else
 	int patLength;
+#endif
 	char *pat = Tcl_GetStringFromObj(e->pat, &patLength);
 	Tcl_UniChar *p;
 
@@ -956,7 +985,7 @@ eval_case_string(
 	    return(EXP_MATCH);
 	} else expDiagLogU(no);
     } else if (e->use == PAT_NULL) {
-	CONST Tcl_UniChar *p;
+	const Tcl_UniChar *p;
 	expDiagLogU("null? ");
 	p = string_first_char (str, 0); /* NEW function in this file, see above */
 
@@ -1295,7 +1324,7 @@ expect_info(
     Tcl_Interp *interp,
     struct exp_cmd_descriptor *ecmd,
     int objc,
-    Tcl_Obj *CONST objv[])		/* Argument objects. */
+    Tcl_Obj *const objv[])		/* Argument objects. */
 {
     struct exp_i *exp_i;
     int i;
@@ -1382,8 +1411,12 @@ int
 Exp_ExpectGlobalObjCmd(
     ClientData clientData,
     Tcl_Interp *interp,
+#if TCL_MAJOR_VERSION >= 9
+    Tcl_Size objc,
+#else
     int objc,
-    Tcl_Obj *CONST objv[])		/* Argument objects. */
+#endif
+    Tcl_Obj *const objv[])		/* Argument objects. */
 {
     int result = TCL_OK;
     struct exp_i *exp_i, **eip;
@@ -2045,7 +2078,7 @@ exp_get_var(
 {
     char *val;
 
-    if (NULL != (val = Tcl_GetVar(interp,var,0 /* local */)))
+    if (NULL != (val = Tcl_GetVar2(interp,var,NULL,0 /* local */)))
 	return(val);
     return(Tcl_GetVar(interp,var,TCL_GLOBAL_ONLY));
 }
@@ -2054,7 +2087,7 @@ static int
 get_timeout(Tcl_Interp *interp)
 {
     ThreadSpecificData *tsdPtr = TCL_TSD_INIT(&dataKey);
-    CONST char *t;
+    const char *t;
 
     if (NULL != (t = exp_get_var(interp,EXPECT_TIMEOUT))) {
 	tsdPtr->timeout = atoi(t);
@@ -2117,8 +2150,8 @@ static char *
 exp_indirect_update2(
     ClientData clientData,
     Tcl_Interp *interp,	/* Interpreter containing variable. */
-    char *name1,	/* Name of variable. */
-    char *name2,	/* Second part of variable name. */
+    const char *name1,	/* Name of variable. */
+    const char *name2,	/* Second part of variable name. */
     int flags)		/* Information about what happened. */
 {
 	char *msg;
@@ -2521,8 +2554,12 @@ int
 Exp_ExpectObjCmd(
     ClientData clientData,
     Tcl_Interp *interp,
+#if TCL_MAJOR_VERSION >= 9
+    Tcl_Size objc,
+#else
     int objc,
-    Tcl_Obj *CONST objv[])		/* Argument objects. */
+#endif
+    Tcl_Obj *const objv[])		/* Argument objects. */
 {
     int cc;			/* number of chars returned in a single read */
 				/* or negative EXP_whatever */
@@ -2773,8 +2810,12 @@ static int
 Exp_TimestampObjCmd(
     ClientData clientData,
     Tcl_Interp *interp,
+#if TCL_MAJOR_VERSION >= 9
+    Tcl_Size objc,
+#else
     int objc,
-    Tcl_Obj *CONST objv[])		/* Argument objects. */
+#endif
+    Tcl_Obj *const objv[])		/* Argument objects. */
 {
 	char *format = 0;
 	time_t seconds = -1;
@@ -2860,23 +2901,23 @@ Exp_TimestampObjCmd(
  */
 
 static int
-process_di _ANSI_ARGS_ ((Tcl_Interp* interp,
+process_di (Tcl_Interp* interp,
 			 int objc,
-			 Tcl_Obj *CONST objv[],		/* Argument objects. */
+			 Tcl_Obj *const objv[],		/* Argument objects. */
 			 int* at,
 			 int* Default,
 			 ExpState **esOut,
-			 CONST char* cmd));
+			 const char* cmd);
 
 static int
 process_di (
     Tcl_Interp *interp,
     int objc,
-    Tcl_Obj *CONST objv[],		/* Argument objects. */
+    Tcl_Obj *const objv[],		/* Argument objects. */
     int* at,
     int* Default,
     ExpState **esOut,
-    CONST char* cmd)
+    const char* cmd)
 {
     static char* options[] = {
 	"-d",
@@ -2955,8 +2996,12 @@ int
 Exp_MatchMaxObjCmd(
     ClientData clientData,
     Tcl_Interp *interp,
+#if TCL_MAJOR_VERSION >= 9
+    Tcl_Size objc,
+#else
     int objc,
-    Tcl_Obj *CONST objv[])		/* Argument objects. */
+#endif
+    Tcl_Obj *const objv[])		/* Argument objects. */
 {
     int size = -1;
     ExpState *esPtr = 0;
@@ -3001,8 +3046,12 @@ int
 Exp_RemoveNullsObjCmd(
     ClientData clientData,
     Tcl_Interp *interp,
+#if TCL_MAJOR_VERSION >= 9
+    Tcl_Size objc,
+#else
     int objc,
-    Tcl_Obj *CONST objv[])		/* Argument objects. */
+#endif
+    Tcl_Obj *const objv[])		/* Argument objects. */
 {
     int value = -1;
     ExpState *esPtr = 0;
@@ -3045,8 +3094,12 @@ int
 Exp_ParityObjCmd(
     ClientData clientData,
     Tcl_Interp *interp,
+#if TCL_MAJOR_VERSION >= 9
+    Tcl_Size objc,
+#else
     int objc,
-    Tcl_Obj *CONST objv[])		/* Argument objects. */
+#endif
+    Tcl_Obj *const objv[])		/* Argument objects. */
 {
     int parity;
     ExpState *esPtr = 0;
@@ -3084,8 +3137,12 @@ int
 Exp_CloseOnEofObjCmd(
     ClientData clientData,
     Tcl_Interp *interp,
+#if TCL_MAJOR_VERSION >= 9
+    Tcl_Size objc,
+#else
     int objc,
-    Tcl_Obj *CONST objv[])		/* Argument objects. */
+#endif
+    Tcl_Obj *const objv[])		/* Argument objects. */
 {
     int close_on_eof;
     ExpState *esPtr = 0;
@@ -3185,7 +3242,7 @@ cmdX(
     ClientData clientData,
     Tcl_Interp *interp,
     int objc,
-    Tcl_Obj *CONST objv[])		/* Argument objects. */
+    Tcl_Obj *const objv[])		/* Argument objects. */
 {
 	exp_cmds_print();
 	return TCL_OK;
