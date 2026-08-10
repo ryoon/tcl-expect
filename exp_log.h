@@ -20,7 +20,7 @@ EXTERN void		expDiagLog (char * fmt,...);
 EXTERN void		expDiagLogU (char *);
 
 EXTERN char *		expPrintify (char *);
-EXTERN char *		expPrintifyUni (Tcl_UniChar *,int);
+EXTERN char *		expPrintifyUni (char *,int);
 EXTERN char *		expPrintifyObj (Tcl_Obj *);
 EXTERN void		expPrintf (char * fmt,...);
 
@@ -39,9 +39,9 @@ EXTERN int		expLogAllGet (void);
 EXTERN void		expLogToStdoutSet (int);
 EXTERN int		expLogToStdoutGet (void);
 EXTERN void		expLogDiagU (char *);
-EXTERN int		expWriteBytesAndLogIfTtyU (ExpState *,Tcl_UniChar *,int);
+EXTERN int		expWriteBytesAndLogIfTtyU (ExpState *,char *,int);
 
 EXTERN int		expLogUserGet (void);
 EXTERN void		expLogUserSet (int);
 
-EXTERN void		expLogInteractionU (ExpState *,Tcl_UniChar *,int);
+EXTERN void		expLogInteractionU (ExpState *,char *,int);

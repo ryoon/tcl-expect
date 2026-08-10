@@ -17,11 +17,11 @@ would appreciate credit if this program or parts of it are used.
 
 /* Proper forward declaration of internal function */
 static int
-Exp_StringCaseMatch2 (const Tcl_UniChar *string, /* String. */
-				  const Tcl_UniChar *stop,   /* First char _after_ string */
-				  const Tcl_UniChar *pattern,	 /* Pattern, which may contain
+Exp_StringCaseMatch2 (const char *string, /* String. */
+				  const char *stop,   /* First char _after_ string */
+				  const char *pattern,	 /* Pattern, which may contain
 								  * special characters. */
-				  const Tcl_UniChar *pstop,   /* First char _after_ pattern */
+				  const char *pstop,   /* First char _after_ pattern */
 				  int nocase);
 
 /* The following functions implement expect's glob-style string matching */
@@ -30,16 +30,16 @@ Exp_StringCaseMatch2 (const Tcl_UniChar *string, /* String. */
 
 int	/* returns # of CHARS that matched */
 Exp_StringCaseMatch(string, strlen, pattern, plen, nocase, offset)		/* INTL */
-     Tcl_UniChar *string;
-     Tcl_UniChar *pattern;
+     char *string;
+     char *pattern;
      int strlen;
      int plen;
      int nocase;
      int *offset;	/* offset in chars from beginning of string where pattern matches */
 {
-    const Tcl_UniChar *s;
-    const Tcl_UniChar *stop = string + strlen;
-    const Tcl_UniChar *pstop = pattern + plen;
+    const char *s;
+    const char *stop = string + strlen;
+    const char *pstop = pattern + plen;
     int ssm, sm;	/* count of bytes matched or -1 */
     int caret = FALSE;
     int star = FALSE;
@@ -124,16 +124,16 @@ Exp_StringCaseMatch(string, strlen, pattern, plen, nocase, offset)		/* INTL */
 
 static int
 Exp_StringCaseMatch2(string,stop,pattern,pstop,nocase)	/* INTL */
-     register const Tcl_UniChar *string; /* String. */
-     register const Tcl_UniChar *stop;   /* First char _after_ string */
-     register const Tcl_UniChar *pattern;	 /* Pattern, which may contain
+     register const char *string; /* String. */
+     register const char *stop;   /* First char _after_ string */
+     register const char *pattern;	 /* Pattern, which may contain
 				 * special characters. */
-     register const Tcl_UniChar *pstop;   /* First char _after_ pattern */
+     register const char *pstop;   /* First char _after_ pattern */
     int nocase;
 {
-    Tcl_UniChar ch1, ch2, p;
+    char ch1[2], ch2[2], p[2];
     int match = 0;	/* # of bytes matched */
-    const Tcl_UniChar *oldString;
+    const char *oldString;
 
 #ifdef EXP_INTERNAL_TRACE_GLOB
     expDiagLog("    ESCM2 pattern=\"");
@@ -177,7 +177,7 @@ Exp_StringCaseMatch2(string,stop,pattern,pstop,nocase)	/* INTL */
 	 */
 	
 	if (*pattern == '*') {
-	    const Tcl_UniChar *tail;
+	    const char *tail;
 
 	    /*
 	     * Skip all successive *'s in the pattern
@@ -190,9 +190,10 @@ Exp_StringCaseMatch2(string,stop,pattern,pstop,nocase)	/* INTL */
 		return((stop-string)+match); /* DEL */
 	    }
 
-	    p = *pattern;
+	    p[0] = *pattern;
+	    p[1] = '\0';
 	    if (nocase) {
-		p = Tcl_UniCharToLower(p);
+		(void)Tcl_UtfToLower(p);
 	    }
 
 	    /* find LONGEST match */
@@ -229,10 +230,10 @@ Exp_StringCaseMatch2(string,stop,pattern,pstop,nocase)	/* INTL */
 		 *
 		 * XXX JH: should this add '&& (p != '$')' ???
 		 */
-		if ((p != '[') && (p != '?') && (p != '\\')) {
+		if ((p[0] != '[') && (p[0] != '?') && (p[0] != '\\')) {
 		    if (nocase) {
-			while ((tail >= string) && (p != *tail)
-			       && (p != Tcl_UniCharToLower(*tail))) {
+			while ((tail >= string) && (p[0] != *tail)
+			       && (Tcl_UtfToLower(tail) > -1) && (p[0] != *tail)) {
 			    tail--;;
 			}
 		    } else {
@@ -242,7 +243,7 @@ Exp_StringCaseMatch2(string,stop,pattern,pstop,nocase)	/* INTL */
 			 *         if p == *tail. Backing before string is ok too,
 			 *         that is the condition to break the outer loop.
 			 */
-			while ((tail >= string) && (p != *tail)) { tail --; }
+			while ((tail >= string) && (p[0] != *tail)) { tail --; }
 		    }
 		}
 
@@ -377,13 +378,17 @@ Exp_StringCaseMatch2(string,stop,pattern,pstop,nocase)	/* INTL */
 	 */
 	
 	oldString = string;
-	ch1 = *string ++;
-	ch2 = *pattern ++;
+	ch1[0] = *string ++;
+	ch1[1] = '\0';
+	ch2[0] = *pattern ++;
+	ch2[1] = '\0';
+	(void)Tcl_UtfToLower(ch1);
+	(void)Tcl_UtfToLower(ch2);
 	if (nocase) {
-	    if (Tcl_UniCharToLower(ch1) != Tcl_UniCharToLower(ch2)) {
+	    if (ch1[0] != ch2[0]) {
 		return -1;
 	    }
-	} else if (ch1 != ch2) {
+	} else if (ch1[0] != ch2[0]) {
 	    return -1;
 	}
 	match += (string - oldString);  /* incr by # matched chars */

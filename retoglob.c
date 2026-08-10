@@ -8,48 +8,46 @@
 #define DEBUG 0
 
 static void
-ExpChopNested (Tcl_UniChar** xstr,
+ExpChopNested (char** xstr,
 			    int*          xstrlen,
-			    Tcl_UniChar   openp,
-			    Tcl_UniChar   closep);
+			    char   openp,
+			    char   closep);
 
-static Tcl_UniChar*
-ExpLiteral (Tcl_UniChar* nexto,
-			 Tcl_UniChar* str,
+static char*
+ExpLiteral (char* nexto,
+			 char* str,
 			 int          strlen);
 
-static Tcl_UniChar*
-ExpCollapseStar (Tcl_UniChar* src,
-			      Tcl_UniChar* last);
-static Tcl_UniChar*
-ExpCollapseQForward (Tcl_UniChar* src,
-				  Tcl_UniChar* last);
+static char*
+ExpCollapseStar (char* src,
+			      char* last);
+static char*
+ExpCollapseQForward (char* src,
+				  char* last);
 
-static Tcl_UniChar*
-ExpCollapseQBack (Tcl_UniChar* src,
-			       Tcl_UniChar* last);
+static char*
+ExpCollapseQBack (char* src,
+			       char* last);
 
-static Tcl_UniChar
-ExpBackslash (Tcl_UniChar prefix,
-			 Tcl_UniChar* str,
+static char
+ExpBackslash (char prefix,
+			 char* str,
 			 int          strlen);
 
 static int
-ExpCountStar (Tcl_UniChar* src, Tcl_UniChar* last);
+ExpCountStar (char* src, char* last);
 
 
 static char*
-xxx (Tcl_UniChar* x, int xl)
+xxx (char* x, int xl)
 {
-  static Tcl_DString ds;
-  Tcl_DStringInit (&ds);
-  return Tcl_UniCharToUtfDString (x,xl,&ds);
+  return x;
 }
 
 
 Tcl_Obj*
 exp_retoglob (
-    Tcl_UniChar* str,
+    char* str,
     int          strlen)
 {
   /*
@@ -61,34 +59,34 @@ exp_retoglob (
    * Location for next location on stack.
    */
 
-  static Tcl_UniChar litprefix [] = {'*','*','*','='};
-  static Tcl_UniChar areprefix [] = {'*','*','*',':'};
-  static Tcl_UniChar areopts   [] = {'(','?'};
-  static Tcl_UniChar nocapture [] = {'?',':'};
-  static Tcl_UniChar lookhas   [] = {'?','='};
-  static Tcl_UniChar looknot   [] = {'?','!'};
-  static Tcl_UniChar xcomment  [] = {'?','#'};
+  static char litprefix [] = {'*','*','*','='};
+  static char areprefix [] = {'*','*','*',':'};
+  static char areopts   [] = {'(','?'};
+  static char nocapture [] = {'?',':'};
+  static char lookhas   [] = {'?','='};
+  static char looknot   [] = {'?','!'};
+  static char xcomment  [] = {'?','#'};
 
-  static Tcl_UniChar classa  [] = {'[','.'};
-  static Tcl_UniChar classb  [] = {'[','='};
-  static Tcl_UniChar classc  [] = {'[',':'};
+  static char classa  [] = {'[','.'};
+  static char classb  [] = {'[','='};
+  static char classc  [] = {'[',':'};
 
 
   int lastsz, expanded;
-  Tcl_UniChar*  out;
-  Tcl_UniChar*  nexto;
-  Tcl_UniChar** paren;
-  Tcl_UniChar** nextp;
+  char*  out;
+  char*  nexto;
+  char** paren;
+  char** nextp;
   Tcl_Obj*     glob = NULL;
-  Tcl_UniChar* mark;
-  Tcl_UniChar  ch;
+  char* mark;
+  char  ch;
 
   /*
    * Set things up.
    */
 
-  out    = nexto = (Tcl_UniChar*)  Tcl_Alloc (strlen*2*sizeof (Tcl_UniChar));
-  paren  = nextp = (Tcl_UniChar**) Tcl_Alloc (strlen*  sizeof (Tcl_UniChar*));
+  out    = nexto = (char*)  Tcl_Alloc (strlen*2);
+  paren  = nextp = (char**) Tcl_Alloc (strlen);
   lastsz = -1;
   expanded = 0;
 
@@ -100,7 +98,7 @@ exp_retoglob (
 #define CHOPC(c) {while (*str != (c) && strlen) CHOP(1) ;}
 #define EMIT(c)  {lastsz = 1; *nexto++ = (c);}
 #define EMITX(c) {lastsz++;   *nexto++ = (c);}
-#define MATCH(lit) ((strlen >= (sizeof (lit)/sizeof (Tcl_UniChar))) && (0 == TclUniCharNcmp (str,(lit),sizeof(lit)/sizeof (Tcl_UniChar))))
+#define MATCH(lit) ((strlen >= (sizeof (lit))) && (0 == Tcl_UtfNcmp (str,(lit),sizeof(lit))))
 #define MATCHC(c) (strlen && (*str == (c)))
 #define PUSHPAREN {*nextp++ = nexto;}
 #define UNEMIT {nexto -= lastsz; lastsz = -1;}
@@ -163,8 +161,8 @@ exp_retoglob (
    */
 
   if (MATCH (areopts)) { /* "(?" */
-    Tcl_UniChar* save = str;
-    Tcl_UniChar* stop;
+    char* save = str;
+    char* stop;
     int stoplen;
     int save_strlen = strlen;
     int all_ARE_opts = 1;
@@ -302,7 +300,7 @@ exp_retoglob (
 	} else if (MATCH (classa) ||
 		   MATCH (classb) ||
 		   MATCH (classc)) {
-	  Tcl_UniChar delim[2];
+	  char delim[2];
 	  delim[0] = str [1];
 	  delim[1] = ']';
 	  CHOP (2);
@@ -496,7 +494,7 @@ exp_retoglob (
    */
  done:
   LOG (stderr,"RESULT_ '%s'\n", xxx(out,nexto-out)); FF;
-  glob = Tcl_NewUnicodeObj (out,(nexto-out));
+  glob = Tcl_NewStringObj (out,(nexto-out));
   goto cleanup;
 
  error:
@@ -511,19 +509,19 @@ exp_retoglob (
 
 static void
 #ifdef _AIX
-ExpChopNested (Tcl_UniChar** xstr,
+ExpChopNested (char** xstr,
 	       int*          xstrlen,
-	       Tcl_UniChar   openp,
-	       Tcl_UniChar   closep)
+	       char   openp,
+	       char   closep)
 #else
 ExpChopNested (xstr,xstrlen, openp, closep)
-     Tcl_UniChar** xstr;
+     char** xstr;
      int*          xstrlen;
-     Tcl_UniChar   openp;
-     Tcl_UniChar   closep;
+     char   openp;
+     char   closep;
 #endif
 {
-  Tcl_UniChar* str    = *xstr;
+  char* str    = *xstr;
   int          strlen = *xstrlen;
   int          level = 0;
 
@@ -544,10 +542,10 @@ ExpChopNested (xstr,xstrlen, openp, closep)
   *xstrlen = strlen;
 }
 
-static Tcl_UniChar*
+static char*
 ExpLiteral (nexto, str, strlen)
-     Tcl_UniChar* nexto;
-     Tcl_UniChar* str;
+     char* nexto;
+     char* str;
      int          strlen;
 {
   int lastsz;
@@ -561,22 +559,21 @@ ExpLiteral (nexto, str, strlen)
   return nexto;
 }
 
-static Tcl_UniChar
+static char
 #ifdef _AIX
 ExpBackslash (char prefix,
-	      Tcl_UniChar* str,
+	      char* str,
 	      int          strlen)
 #else
 ExpBackslash (prefix, str, strlen)
      char prefix;
-     Tcl_UniChar* str;
+     char* str;
      int          strlen;
 #endif
 {
   /* strlen <= 8 */
   char buf[20];
   char dst[TCL_UTF_MAX+1];
-  Tcl_UniChar ch;
   int at = 0;
 
   /* Construct an utf backslash sequence we can throw to Tcl */
@@ -589,16 +586,15 @@ ExpBackslash (prefix, str, strlen)
   }
 
   Tcl_UtfBackslash (buf, NULL, dst);
-  TclUtfToUniChar (dst, &ch);
-  return ch;
+  return dst[0];
 }
 
-static Tcl_UniChar*
+static char*
 ExpCollapseStar (src, last)
-     Tcl_UniChar* src;
-     Tcl_UniChar* last;
+     char* src;
+     char* last;
 {
-  Tcl_UniChar* dst, *base;
+  char* dst, *base;
   int skip = 0;
   int star = 0;
 
@@ -640,12 +636,12 @@ ExpCollapseStar (src, last)
   return dst;
 }
 
-static Tcl_UniChar*
+static char*
 ExpCollapseQForward (src, last)
-     Tcl_UniChar* src;
-     Tcl_UniChar* last;
+     char* src;
+     char* last;
 {
-  Tcl_UniChar* dst, *base;
+  char* dst, *base;
   int skip = 0;
   int quest = 0;
 
@@ -688,12 +684,12 @@ ExpCollapseQForward (src, last)
   return dst;
 }
 
-static Tcl_UniChar*
+static char*
 ExpCollapseQBack (src, last)
-     Tcl_UniChar* src;
-     Tcl_UniChar* last;
+     char* src;
+     char* last;
 {
-  Tcl_UniChar* dst, *base;
+  char* dst, *base;
   int skip = 0;
 
   /* Collapses series of ?'s coming before a *. State machine. The
@@ -732,8 +728,8 @@ ExpCollapseQBack (src, last)
 
 static int
 ExpCountStar (src, last)
-    Tcl_UniChar* src;
-    Tcl_UniChar* last;
+    char* src;
+    char* last;
 {
     int skip = 0;
     int stars = 0;

@@ -519,18 +519,12 @@ expWriteChars(esPtr,buffer,lenBytes)
 int
 expWriteCharsUni(esPtr,buffer,lenChars)
      ExpState *esPtr;
-     Tcl_UniChar *buffer;
+     char *buffer;
      int lenChars;
 {
   int rc;
-  Tcl_DString ds;
 
-  Tcl_DStringInit (&ds);
-  Tcl_UniCharToUtfDString (buffer,lenChars,&ds);
-
-  rc = expWriteChars(esPtr,Tcl_DStringValue (&ds), Tcl_DStringLength (&ds));
-
-  Tcl_DStringFree (&ds);
+  rc = expWriteChars(esPtr,buffer, lenChars);
 
   return rc;
 }
@@ -720,7 +714,7 @@ expCreateChannel(interp,fdin,fdout,pid)
 
     esPtr->input.max    = 1;
     esPtr->input.use    = 0;
-    esPtr->input.buffer = (Tcl_UniChar*) Tcl_Alloc (sizeof (Tcl_UniChar));
+    esPtr->input.buffer = (char *) Tcl_Alloc (8); /* XXX: Do not use magic number. */
     esPtr->input.newchars = Tcl_NewObj();
     Tcl_IncrRefCount (esPtr->input.newchars);
 

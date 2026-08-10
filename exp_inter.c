@@ -203,17 +203,17 @@ intMatch(
     int *skip,			/* # of chars to skip */
     Tcl_RegExpInfo *info)
 {
-    Tcl_UniChar *string;
+    char *string;
     struct keymap *km;
     char *ks;		/* string from a keymap */
 
-    Tcl_UniChar *start_search;	/* where in string to start searching */
+    char *start_search;	/* where in string to start searching */
     int offset;		/* # of chars from string to start searching */
 
-    Tcl_UniChar *string_end;
+    char *string_end;
     int numchars;
     int rm_nulls;		/* skip nulls if true */
-    Tcl_UniChar ch;
+    char ch;
 
     string   = esPtr->input.buffer;
     numchars = esPtr->input.use; /* Actually #chars */
@@ -248,7 +248,7 @@ intMatch(
 			/* further along the string */
 
 	for (km=keymap;km;km=km->next) {
-	    Tcl_UniChar *s;	/* current character being examined */
+	    char *s;	/* current character being examined */
 
 	    if (km->null) {
 		if (ch == 0) {
@@ -259,7 +259,7 @@ intMatch(
 	        }
 	    } else if (!km->re) {
 		int kslen;
-		Tcl_UniChar sch, ksch;
+		char sch, ksch;
 		
 		/* fixed string */
 
@@ -285,8 +285,9 @@ intMatch(
 		    }
 
 		    sch = *s;
-		    kslen = Tcl_UtfToUniChar(ks, &ksch);
-		    
+		    kslen = strnlen(ks, TCL_UTF_MAX);
+		    ksch = ks[0];
+
 		    if (sch == ksch) continue;
 		    if ((sch == '\0') && rm_nulls) {
 			kslen = 0;
@@ -306,7 +307,7 @@ intMatch(
 		flags = (offset > 0) ? TCL_REG_NOTBOL : 0;
 
 		/* ZZZ: Future optimization: Avoid copying */
-		buf = Tcl_NewUnicodeObj (esPtr->input.buffer, esPtr->input.use);
+		buf = Tcl_NewStringObj (esPtr->input.buffer, esPtr->input.use);
 		Tcl_IncrRefCount (buf);
 		result = Tcl_RegExpExecObj(NULL, re, buf, offset,
 			-1 /* nmatches */, flags);
@@ -361,7 +362,7 @@ intRegExpMatchProcess(
 {
     char name[20], value[20];
     int i;
-    Tcl_Obj* buf = Tcl_NewUnicodeObj (esPtr->input.buffer,esPtr->input.use);
+    Tcl_Obj* buf = Tcl_NewStringObj (esPtr->input.buffer,esPtr->input.use);
 
     for (i=0;i<=info->nsubs;i++) {
 	int start, end;
@@ -417,7 +418,7 @@ intEcho(
 	offsetBytes = seenBytes;
     }
 
-    (void) expWriteCharsUni(esPtr,
+    (void) expWriteChars(esPtr,
 			    esPtr->input.buffer + offsetBytes,
 		   echoBytes);
 
@@ -436,10 +437,10 @@ intRead(
     int interruptible,
     int key)
 {
-    Tcl_UniChar *eobOld;  /* old end of buffer */
+    char *eobOld;  /* old end of buffer */
     int cc;
     int numchars;
-    Tcl_UniChar *str;
+    char *str;
 
     str      = esPtr->input.buffer;
     numchars = esPtr->input.use;
@@ -723,7 +724,7 @@ Exp_InteractObjCmd(
     Tcl_Obj *const *objv_copy;	/* original, for error messages */
     Tcl_Obj **objv = (Tcl_Obj **) initial_objv;
     char *string;
-    Tcl_UniChar *ustring;
+    char *ustring;
 
 #ifdef SIMPLE_EVENT
     int pid;
@@ -1559,7 +1560,7 @@ Exp_InteractObjCmd(
 	    size -= skip;
 	    if (size) {
 		ustring = u->input.buffer;
-		memmove(ustring, ustring + skip, size * sizeof(Tcl_UniChar));
+		memmove(ustring, ustring + skip, size);
 	    }
 	} else {
 	    ustring = u->input.buffer;

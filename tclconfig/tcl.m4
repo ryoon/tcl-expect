@@ -1144,7 +1144,7 @@ AC_DEFUN([TEA_CONFIG_CFLAGS], [
     AS_IF([test "$GCC" = yes], [
 	# TEA specific:
 	CFLAGS_OPTIMIZE=-O2
-	CFLAGS_WARNING="-Wall"
+	CFLAGS_WARNING="-Wno-discarded-qualifiers -Wno-incompatible-pointer-types"
     ], [CFLAGS_WARNING=""])
 dnl FIXME: Replace AC_CHECK_PROG with AC_CHECK_TOOL once cross compiling is fixed.
 dnl AC_CHECK_TOOL(AR, ar)

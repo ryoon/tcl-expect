@@ -55,8 +55,8 @@ int exp_default_close_on_eof =  TRUE;
 #define EXPECT_TIMEOUT		"timeout"
 #define EXPECT_OUT		"expect_out"
 
-extern int Exp_StringCaseMatch (Tcl_UniChar *string, int strlen,
-					    Tcl_UniChar *pattern,int plen,
+extern int Exp_StringCaseMatch (char *string, int strlen,
+					    char *pattern,int plen,
 					    int nocase,int *offset);
 
 typedef struct ThreadSpecificData {
@@ -500,14 +500,14 @@ parse_expect_args(
 
 		{
 		    Tcl_Obj* g;
-		    Tcl_UniChar* str;
+		    char* str;
 #if TCL_MAJOR_VERSION >= 9
 		    Tcl_Size strlen;
 #else
 		    int strlen;
 #endif
 
-		    str = Tcl_GetUnicodeFromObj (objv[i], &strlen);
+		    str = Tcl_GetStringFromObj (objv[i], &strlen);
 		    g = exp_retoglob (str, strlen);
 
 		    if (g) {
@@ -710,7 +710,7 @@ static char no[] = "no\r\n";
 struct eval_out {
     struct ecase *e;		/* ecase that matched */
     ExpState *esPtr;		/* ExpState that matched */
-    Tcl_UniChar* matchbuf;   /* Buffer that matched, */
+    char* matchbuf;   /* Buffer that matched, */
     int          matchlen;   /* and #chars that matched, or
 			      * #chars in buffer at EOF */
     /* This points into the esPtr->input.buffer ! */
@@ -736,28 +736,33 @@ struct eval_out {
  *----------------------------------------------------------------------
  */
 
-Tcl_UniChar *
+char *
 string_case_first(	/* INTL */
-    register Tcl_UniChar *string,	/* String (unicode). */
+    register char *string,	/* String (unicode). */
     int length,                         /* length of above string */
     register char *pattern)	/* Pattern, which may contain
 				 * special characters (utf8). */
 {
-    Tcl_UniChar *s;
+    char *s;
     char *p;
     int offset;
     register int consumed = 0;
-    Tcl_UniChar ch1, ch2;
-    Tcl_UniChar *bufend = string + length;
+    char ch1[2], ch2[2];
+    char *bufend = string + length;
 
     while ((*string != 0) && (string < bufend)) {
 	s = string;
 	p = pattern;
         while ((*s) && (s < bufend)) {
-	    ch1 = *s++;
+	    ch1[0] = *s++;
+	    ch1[1] = '\0';
             consumed++;
-	    offset = TclUtfToUniChar(p, &ch2);
-	    if (Tcl_UniCharToLower(ch1) != Tcl_UniCharToLower(ch2)) {
+	    offset = strnlen(p, TCL_UTF_MAX);
+	    ch2[0] = p[0];
+	    ch2[1] = '\0';
+	    (void)Tcl_UtfToLower(ch1);
+	    (void)Tcl_UtfToLower(ch2);
+	    if (ch1[0] != ch2[0]) {
 		break;
 	    }
 	    p += offset;
@@ -771,19 +776,19 @@ string_case_first(	/* INTL */
     return NULL;
 }
 
-Tcl_UniChar *
+char *
 string_first(	/* INTL */
-    register Tcl_UniChar *string,       /* String (unicode). */
+    register char *string,       /* String (unicode). */
     int length,                         /* length of above string */
     register char *pattern)             /* Pattern, which may contain
                                          * special characters (utf8). */
 {
-    Tcl_UniChar *s;
+    char *s;
     char *p;
     int offset;
     register int consumed = 0;
-    Tcl_UniChar ch1, ch2;
-    Tcl_UniChar *bufend = string + length;
+    char ch1;
+    char *bufend = string + length;
     
     while ((*string != 0) && (string < bufend)) {
 	s = string;
@@ -791,8 +796,8 @@ string_first(	/* INTL */
         while ((*s) && (s < bufend)) {
 	    ch1 = *s++;
             consumed++;
-	    offset = TclUtfToUniChar(p, &ch2);
-	    if (ch1 != ch2) {
+	    offset = strnlen(p, TCL_UTF_MAX);
+	    if (ch1 != p[0]) {
 		break;
 	    }
 	    p += offset;
@@ -806,14 +811,14 @@ string_first(	/* INTL */
     return NULL;
 }
 
-Tcl_UniChar *
+char *
 string_first_char(	/* INTL */
-    register Tcl_UniChar *string,	/* String. */
-    register Tcl_UniChar pattern)
+    register char *string,	/* String. */
+    register char pattern)
 {
     /* unicode based Tcl_UtfFindFirst */
 
-    Tcl_UniChar find;
+    char find;
     
     while (1) {
         find = *string;
@@ -845,7 +850,7 @@ eval_case_string(
     Tcl_RegExp re;
     Tcl_RegExpInfo info;
     Tcl_Obj* buf;
-    Tcl_UniChar *str;
+    char *str;
     int numchars, flags, dummy, globmatch;
     int result;
 
@@ -872,7 +877,7 @@ eval_case_string(
 #else
 	    int plen;
 #endif
-	    Tcl_UniChar* pat = Tcl_GetUnicodeFromObj(e->gate,&plen);
+	    char* pat = Tcl_GetStringFromObj(e->gate,&plen);
 
 	    expDiagLog("Gate \"");
 	    expDiagLogU(expPrintify(Tcl_GetString(e->gate)));
@@ -902,7 +907,7 @@ eval_case_string(
 	re = Tcl_GetRegExpFromObj(interp, e->pat, flags);
 
 	    /* ZZZ: Future optimization: Avoid copying */
-	    buf = Tcl_NewUnicodeObj (str, numchars);
+	    buf = Tcl_NewStringObj (str, numchars);
 	    Tcl_IncrRefCount (buf);
 	    result = Tcl_RegExpExecObj(interp, re, buf, 0 /* offset */,
 		-1 /* nmatches */, 0 /* eflags */);
@@ -939,7 +944,7 @@ eval_case_string(
 #else
 	    int plen;
 #endif
-	    Tcl_UniChar* pat = Tcl_GetUnicodeFromObj(e->pat,&plen);
+	    char* pat = Tcl_GetStringFromObj(e->pat,&plen);
 
 	    match = Exp_StringCaseMatch(str,numchars, pat, plen,
 		    (e->Case == CASE_NORM) ? 0 : 1,
@@ -961,7 +966,7 @@ eval_case_string(
 	int patLength;
 #endif
 	char *pat = Tcl_GetStringFromObj(e->pat, &patLength);
-	Tcl_UniChar *p;
+	char *p;
 
 	if (e->Case == CASE_NORM) {
 	    p = string_first(str, numchars, pat); /* NEW function in this file, see above */
@@ -985,7 +990,7 @@ eval_case_string(
 	    return(EXP_MATCH);
 	} else expDiagLogU(no);
     } else if (e->use == PAT_NULL) {
-	const Tcl_UniChar *p;
+	const char *p;
 	expDiagLogU("null? ");
 	p = string_first_char (str, 0); /* NEW function in this file, see above */
 
@@ -1627,7 +1632,7 @@ void
 expAdjust(ExpState *esPtr)
 {
     int new_msize, excess;
-    Tcl_UniChar *string;
+    char *string;
 
     /*
      * Resize buffer to user's request * 3 + 1.
@@ -1667,9 +1672,9 @@ expAdjust(ExpState *esPtr)
 	     */
 
 	    if (esPtr->input.max < new_msize) {
-	        esPtr->input.buffer = (Tcl_UniChar*) \
+	        esPtr->input.buffer = (char*) \
 		    Tcl_Realloc ((char*)esPtr->input.buffer,
-				 new_msize * sizeof (Tcl_UniChar));
+				 new_msize);
 	    }
 	}
 
@@ -1762,7 +1767,7 @@ expNullStrip(
     ExpUniBuf* buf,
     int offsetChars)
 {
-    Tcl_UniChar *src, *src2, *dest, *end;
+    char *src, *src2, *dest, *end;
     int newsize;       /* size of obj after all nulls removed */
 
     src2 = src = dest = buf->buffer + offsetChars;
@@ -1965,10 +1970,10 @@ exp_buffer_shuffle( /* INTL */
     char *array_name,
     char *caller_name)
 {
-    Tcl_UniChar *str;
-    Tcl_UniChar *p;
+    char *str;
+    char *p;
     int numchars, newlen, skiplen;
-    Tcl_UniChar lostChar;
+    char lostChar;
 
     /*
      * allow user to see data we are discarding
@@ -2006,7 +2011,7 @@ exp_buffer_shuffle( /* INTL */
     expDiagLogU(expPrintifyUni(str,numchars));
     expDiagLogU("\"\r\n");
     Tcl_SetVar2Ex(interp,array_name,"buffer",
-		  Tcl_NewUnicodeObj (str, skiplen),
+		  Tcl_NewStringObj (str, skiplen),
 	    save_flags);
 
     /*
@@ -2252,7 +2257,7 @@ expMatchProcess(
 {
     ExpState *esPtr = 0;
     Tcl_Obj *body = 0;
-    Tcl_UniChar *buffer;
+    char *buffer;
     struct ecase *e = 0;	/* points to current ecase */
     int match = -1;		/* characters matched */
     /* uprooted by a NULL */
@@ -2269,7 +2274,7 @@ expMatchProcess(
  expDiagLog("%s: set %s(%s) \"",detail,EXPECT_OUT,indexName); \
  expDiagLogU(expPrintifyUni(value,numchars)); \
  expDiagLogU("\"\r\n"); \
- Tcl_SetVar2Ex(interp, EXPECT_OUT,indexName,Tcl_NewUnicodeObj(value,numchars),(bg ? TCL_GLOBAL_ONLY : 0));
+ Tcl_SetVar2Ex(interp, EXPECT_OUT,indexName,Tcl_NewStringObj(value,numchars),(bg ? TCL_GLOBAL_ONLY : 0));
 
     if (eo->e) {
 	e = eo->e;
@@ -2310,7 +2315,7 @@ expMatchProcess(
 	    re = Tcl_GetRegExpFromObj(interp, e->pat, flags);
 	    Tcl_RegExpGetInfo(re, &info);
 
-	    buf = Tcl_NewUnicodeObj (buffer,esPtr->input.use);
+	    buf = Tcl_NewStringObj (buffer,esPtr->input.use);
 	    for (i=0;i<=info.nsubs;i++) {
 		int start, end;
 		Tcl_Obj *val;
@@ -2341,7 +2346,7 @@ expMatchProcess(
 	    }
 	    Tcl_DecrRefCount (buf);
 	} else if (e && (e->use == PAT_GLOB || e->use == PAT_EXACT)) {
-	    Tcl_UniChar *str;
+	    char *str;
 
 	    if (e->indices) {
 		/* start index */
@@ -2375,7 +2380,7 @@ expMatchProcess(
     /* this is broken out of (match > 0) (above) since it can be */
     /* that an EOF occurred with match == 0 */
     if (eo->esPtr) {
-	Tcl_UniChar *str;
+	char *str;
 	int numchars;
 
 	out("spawn_id",esPtr->name);

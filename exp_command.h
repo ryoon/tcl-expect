@@ -89,7 +89,7 @@ typedef struct ExpOrigin {
 
 
 typedef struct ExpUniBuf {
-    Tcl_UniChar* buffer;    /* char buffer, holdings unicode chars (fixed width) */
+    char*        buffer;    /* char buffer, holdings unicode chars (fixed width) */
     int          max;       /* number of CHARS the buffer has space for (== old msize) */
     int          use;       /* number of CHARS the buffer is currently holding */
     Tcl_Obj*     newchars;  /* Object to hold newly read characters */
@@ -211,7 +211,7 @@ extern Tcl_ChannelType expChannelType;
 
 EXTERN void		expAdjust (ExpState *);
 EXTERN int		expWriteChars (ExpState *,char *,int);
-EXTERN int		expWriteCharsUni (ExpState *,Tcl_UniChar *,int);
+EXTERN int		expWriteCharsUni (ExpState *,char *,int);
 EXTERN void		exp_buffer_shuffle (Tcl_Interp *,ExpState *,int,char *,char *);
 EXTERN int		exp_close (Tcl_Interp *,ExpState *);
 EXTERN void		exp_close_all (Tcl_Interp *);

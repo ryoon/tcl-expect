@@ -46,7 +46,7 @@ static Tcl_ThreadDataKey dataKey;
  */
 static char bigbuf[2000];
 
-static void expDiagWriteCharsUni (Tcl_UniChar *str,int len);
+static void expDiagWriteCharsUni (char *str,int len);
 
 /*
  * Following this are several functions that log the conversation.  Some
@@ -82,7 +82,7 @@ static void expDiagWriteCharsUni (Tcl_UniChar *str,int len);
 int
 expWriteBytesAndLogIfTtyU(esPtr,buf,lenChars)
     ExpState *esPtr;
-    Tcl_UniChar *buf;
+    char *buf;
     int lenChars;
 {
     int wc;
@@ -94,11 +94,7 @@ expWriteBytesAndLogIfTtyU(esPtr,buf,lenChars)
 	wc = -1;
 
     if (tsdPtr->logChannel && ((esPtr->fdout == 1) || expDevttyIs(esPtr))) {
-      Tcl_DString ds;
-      Tcl_DStringInit (&ds);
-      Tcl_UniCharToUtfDString (buf,lenChars,&ds);
-      Tcl_WriteChars(tsdPtr->logChannel,Tcl_DStringValue (&ds), Tcl_DStringLength (&ds));
-      Tcl_DStringFree (&ds);
+      Tcl_WriteChars(tsdPtr->logChannel,buf, lenChars);
     }
     return wc;
 }
@@ -132,17 +128,13 @@ char *buf;
 void
 expLogInteractionU(esPtr,buf,buflen)
     ExpState *esPtr;
-    Tcl_UniChar *buf;
+    char *buf;
     int buflen;
 {
     ThreadSpecificData *tsdPtr = TCL_TSD_INIT(&dataKey);
 
     if (tsdPtr->logAll || (tsdPtr->logUser && tsdPtr->logChannel)) {
-      Tcl_DString ds;
-      Tcl_DStringInit (&ds);
-      Tcl_UniCharToUtfDString (buf,buflen,&ds);
-      Tcl_WriteChars(tsdPtr->logChannel,Tcl_DStringValue (&ds), Tcl_DStringLength (&ds));
-      Tcl_DStringFree (&ds);
+      Tcl_WriteChars(tsdPtr->logChannel,buf, buflen);
     }
 
     /* hmm.... if stdout is closed such as by disconnect, loguser
@@ -224,6 +216,7 @@ expErrorLog (char * arg1,...)
     va_list args;
 
     va_start(args,arg1);
+    fmt = va_arg(args,char *);
     (void) vsprintf(bigbuf,fmt,args);
 
     expDiagWriteChars(bigbuf,-1);
@@ -309,6 +302,7 @@ expPrintf (char * arg1,...)
   int len, rc;
 
   va_start(args,arg1);
+  fmt = va_arg(args,char *);
   len = vsprintf(bigbuf,fmt,args);
  retry:
   rc = write(2,bigbuf,len);
@@ -426,18 +420,14 @@ int len;
 /* write Unicode chars */
 static void
 expDiagWriteCharsUni(str,len)
-Tcl_UniChar *str;
+char *str;
 int len;
 {
-    Tcl_DString ds;
     ThreadSpecificData *tsdPtr = TCL_TSD_INIT(&dataKey);
 
     if (!tsdPtr->diagChannel) return;
 
-    Tcl_DStringInit (&ds);
-    Tcl_UniCharToUtfDString (str,len,&ds);
-    Tcl_WriteChars(tsdPtr->diagChannel,Tcl_DStringValue (&ds), Tcl_DStringLength (&ds));
-    Tcl_DStringFree (&ds);
+    Tcl_WriteChars(tsdPtr->diagChannel,str, len);
 }
 
 char *
@@ -672,14 +662,14 @@ char *s;
 /* in diagnostic mode, "expect -d" */
 static char *
 expPrintifyRealUni(s,numchars)
-Tcl_UniChar *s;
+char *s;
 int numchars;
 {
   static int destlen = 0;
   static char *dest = 0;
   char *d;		/* ptr into dest */
   unsigned int need;
-  Tcl_UniChar ch;
+  char ch;
 
   if (s == 0) return("<null>");
   if (numchars == 0) return("");
@@ -737,7 +727,7 @@ char *s;
  
 char *
 expPrintifyUni(s,numchars) /* INTL */
-Tcl_UniChar *s;
+char *s;
 int numchars;
 {
     ThreadSpecificData *tsdPtr = TCL_TSD_INIT(&dataKey);

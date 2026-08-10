@@ -5924,7 +5924,7 @@ $as_echo "$tcl_cv_sys_version" >&6; }
 
 	# TEA specific:
 	CFLAGS_OPTIMIZE=-O2
-	CFLAGS_WARNING="-Wall"
+	CFLAGS_WARNING="-Wno-discarded-qualifiers -Wno-incompatible-pointer-types"
 
 else
   CFLAGS_WARNING=""
