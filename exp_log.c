@@ -309,7 +309,7 @@ expPrintf TCL_VARARGS_DEF(char *,arg1)
   int len, rc;
 
   fmt = TCL_VARARGS_START(char *,arg1,args);
-  len = vsprintf(bigbuf,arg1,args);
+  len = vsprintf(bigbuf,fmt,args);
  retry:
   rc = write(2,bigbuf,len);
   if ((rc == -1) && (errno == EAGAIN)) goto retry;
