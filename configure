@@ -730,7 +730,6 @@ infodir
 docdir
 oldincludedir
 includedir
-runstatedir
 localstatedir
 sharedstatedir
 sysconfdir
@@ -811,7 +810,6 @@ datadir='${datarootdir}'
 sysconfdir='${prefix}/etc'
 sharedstatedir='${prefix}/com'
 localstatedir='${prefix}/var'
-runstatedir='${localstatedir}/run'
 includedir='${prefix}/include'
 oldincludedir='/usr/include'
 docdir='${datarootdir}/doc/${PACKAGE_TARNAME}'
@@ -1064,15 +1062,6 @@ do
   | -silent | --silent | --silen | --sile | --sil)
     silent=yes ;;
 
-  -runstatedir | --runstatedir | --runstatedi | --runstated \
-  | --runstate | --runstat | --runsta | --runst | --runs \
-  | --run | --ru | --r)
-    ac_prev=runstatedir ;;
-  -runstatedir=* | --runstatedir=* | --runstatedi=* | --runstated=* \
-  | --runstate=* | --runstat=* | --runsta=* | --runst=* | --runs=* \
-  | --run=* | --ru=* | --r=*)
-    runstatedir=$ac_optarg ;;
-
   -sbindir | --sbindir | --sbindi | --sbind | --sbin | --sbi | --sb)
     ac_prev=sbindir ;;
   -sbindir=* | --sbindir=* | --sbindi=* | --sbind=* | --sbin=* \
@@ -1210,7 +1199,7 @@ fi
 for ac_var in	exec_prefix prefix bindir sbindir libexecdir datarootdir \
 		datadir sysconfdir sharedstatedir localstatedir includedir \
 		oldincludedir docdir infodir htmldir dvidir pdfdir psdir \
-		libdir localedir mandir runstatedir
+		libdir localedir mandir
 do
   eval ac_val=\$$ac_var
   # Remove trailing slashes.
@@ -1363,7 +1352,6 @@ Fine tuning of the installation directories:
   --sysconfdir=DIR        read-only single-machine data [PREFIX/etc]
   --sharedstatedir=DIR    modifiable architecture-independent data [PREFIX/com]
   --localstatedir=DIR     modifiable single-machine data [PREFIX/var]
-  --runstatedir=DIR       modifiable per-process data [LOCALSTATEDIR/run]
   --libdir=DIR            object code libraries [EPREFIX/lib]
   --includedir=DIR        C header files [PREFIX/include]
   --oldincludedir=DIR     C header files for non-gcc [/usr/include]
@@ -7358,39 +7346,19 @@ else
 	# See if the compiler knows natively about __int64
 	cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
-
+#include <sys/types.h>
 int
 main ()
 {
-__int64 value = (__int64) 0;
+int64_t value = (int64_t) 0;
   ;
   return 0;
 }
 _ACEOF
 if ac_fn_c_try_compile "$LINENO"; then :
-  tcl_type_64bit=__int64
+  tcl_cv_type_64bit=int64_t
 else
-  tcl_type_64bit="long long"
-fi
-rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
-	# See if we should use long anyway  Note that we substitute in the
-	# type that is our current guess for a 64-bit type inside this check
-	# program, so it should be modified only carefully...
-        cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-
-int
-main ()
-{
-switch (0) {
-            case 1: case (sizeof(${tcl_type_64bit})==sizeof(long)): ;
-        }
-  ;
-  return 0;
-}
-_ACEOF
-if ac_fn_c_try_compile "$LINENO"; then :
-  tcl_cv_type_64bit=${tcl_type_64bit}
+  tcl_cv_type_64bit="long long"
 fi
 rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
 fi
@@ -7989,6 +7957,7 @@ else
 	cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 #include <time.h>
+#include <stdlib.h>
 int
 main ()
 {
@@ -8372,6 +8341,14 @@ if test "x$ac_cv_lib_util_openpty" = xyes; then :
 fi
 
 fi
+
+ac_fn_c_check_header_mongrel "$LINENO" "libutil.h" "ac_cv_header_libutil_h" "$ac_includes_default"
+if test "x$ac_cv_header_libutil_h" = xyes; then :
+  $as_echo "#define HAVE_LIBUTIL_H 1" >>confdefs.h
+
+fi
+
+
 
 ######################################################################
 # End of library/func checking
@@ -8791,7 +8768,7 @@ fi
 $as_echo_n "checking for memcpy... " >&6; }
 cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
-
+#include <string.h>
 int
 main ()
 {
@@ -8831,6 +8808,7 @@ else
 /* end confdefs.h.  */
 
 #include <sys/wait.h>
+int
 main() {
 #ifndef WNOHANG
 	return 0;
@@ -8867,6 +8845,7 @@ else
 
 #include <stdio.h>
 #include <sys/wait.h>
+int
 main() {
 #ifdef WNOHANG
 	FILE *fp = fopen("wnohang","w");
@@ -8922,7 +8901,6 @@ $as_echo "none" >&6; }
 
 fi
 
-
 # FIXME: check if alarm exists
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking if signals need to be re-armed" >&5
 $as_echo_n "checking if signals need to be re-armed... " >&6; }
@@ -8935,23 +8913,24 @@ else
 /* end confdefs.h.  */
 
 #include <signal.h>
-#define RETSIGTYPE $retsigtype
+#include <unistd.h>
+#include <sys/wait.h>
+#include <stdlib.h>
 
 int signal_rearms = 0;
 
 RETSIGTYPE
-child_sigint_handler(n)
-int n;
+child_sigint_handler(int n)
 {
 }
 
 RETSIGTYPE
-parent_sigint_handler(n)
-int n;
+parent_sigint_handler(int n)
 {
 signal_rearms++;
 }
 
+int
 main()
 {
 	signal(SIGINT,parent_sigint_handler);
@@ -9234,6 +9213,8 @@ else
 /* end confdefs.h.  */
 
 #include <sgtty.h>
+#include <stdlib.h>
+int
 main()
 {
   struct sgttyb tmp;
@@ -9274,6 +9255,7 @@ else
   cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 #include <termio.h>
+  int
   main()
   {
     struct termio tmp;
@@ -9312,6 +9294,8 @@ else
 #  include <inttypes.h>
 #  endif
 #  include <termios.h>
+#  include <stdlib.h>
+  int
   main()
   {
     struct termios tmp;
@@ -9350,6 +9334,7 @@ else
 #include <inttypes.h>
 #endif
 #include <termios.h>
+int
 main() {
 #if defined(TCGETS) || defined(TCGETA)
 	return 0;
@@ -9388,6 +9373,7 @@ else
 #include <inttypes.h>
 #endif
 #include <termios.h>
+int
 main() {
 #ifdef TIOCGWINSZ
 	return 0;
@@ -9423,6 +9409,7 @@ else
   cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 
+int
 main(){
 #ifdef CRAY
 	return 0;
@@ -9563,8 +9550,11 @@ else
   cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 
+#include <stdlib.h>
+
 extern char *tzname[2];
 extern int daylight;
+int
 main()
 {
   int *x = &daylight;
