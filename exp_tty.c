@@ -320,7 +320,9 @@ exec_stty(
     int devtty)		/* if true, redirect to /dev/tty */
 {
 	int i;
+#ifdef STTY_READS_STDOUT
 	int rc;
+#endif
 
 	Tcl_Obj *cmdObj = Tcl_NewStringObj("",0);
 	Tcl_IncrRefCount(cmdObj);
@@ -347,7 +349,9 @@ exec_stty(
 	 */
 
 	Tcl_SetVar(interp,"errorCode","NONE",0);
+#ifdef STTY_READS_STDOUT
 	rc = Tcl_EvalObjEx(interp,cmdObj,TCL_EVAL_DIRECT);
+#endif
 
 	Tcl_DecrRefCount(cmdObj);
 
