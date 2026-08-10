@@ -7,6 +7,8 @@ would appreciate credit if you use this file or parts of it.
 
 */
 
+#include <sys/ioctl.h>
+
 #include "expect_cf.h"
 #include "tcl.h"
 
