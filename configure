@@ -8062,8 +8062,13 @@ int
 main ()
 {
 
+int
+main(void)
+{
 union wait x;
-WIFEXITED(x);	/* Generates compiler error if WIFEXITED uses an int. */
+int ret = waitpid(1, &x, 0);
+return 0;
+}
 
   ;
   return 0;
