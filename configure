@@ -7344,21 +7344,41 @@ else
 
 	tcl_cv_type_64bit=none
 	# See if the compiler knows natively about __int64
-	cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+       cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
-#include <sys/types.h>
+
 int
 main ()
 {
-int64_t value = (int64_t) 0;
+__int64 value = (__int64) 0;
   ;
   return 0;
 }
 _ACEOF
 if ac_fn_c_try_compile "$LINENO"; then :
-  tcl_cv_type_64bit=int64_t
+  tcl_type_64bit=__int64
 else
-  tcl_cv_type_64bit="long long"
+  tcl_type_64bit="long long"
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+       # See if we should use long anyway  Note that we substitute in the
+       # type that is our current guess for a 64-bit type inside this check
+       # program, so it should be modified only carefully...
+        cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+int
+main ()
+{
+switch (0) {
+            case 1: case (sizeof(${tcl_type_64bit})==sizeof(long)): ;
+        }
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_compile "$LINENO"; then :
+  tcl_cv_type_64bit=${tcl_type_64bit}
 fi
 rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
 fi
