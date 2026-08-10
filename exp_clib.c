@@ -2972,7 +2972,7 @@ char *s;
 			strcpy(d,"\\n");		d += 2;
 		} else if (*s == '\t') {
 			strcpy(d,"\\t");		d += 2;
-		} else if (isascii(*s) && isprint(*s)) {
+		} else if (isascii(*s) && isprint((unsigned char)*s)) {
 			*d = *s;			d += 1;
 		} else {
 			sprintf(d,"\\x%02x",*s & 0xff);	d += 4;
