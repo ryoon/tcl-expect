@@ -214,18 +214,17 @@ fi
 # Check for FreeBSD/NetBSD openpty()
 unset ac_cv_func_openpty
 
-AC_CHECK_FUNC(openpty, AC_DEFINE(HAVE_OPENPTY) openpty=1 , openpty=0)
-if test $openpty -eq 0 ; then
-  AC_CHECK_LIB(util, openpty, [
+AC_CHECK_DECL(openpty, AC_DEFINE(HAVE_OPENPTY) openpty=1 , openpty=0, [#include <util.h>])
+AC_CHECK_LIB(util, openpty, [
 	# we only need to define OPENPTY once, but since we are overriding
 	# the default behavior, we must also handle augment LIBS too.
 	# This needn't be done in the 2nd and 3rd tests.
 	AC_DEFINE(HAVE_OPENPTY)
 	LIBS="$LIBS -lutil"
   ])
-fi
 
 AC_CHECK_HEADER(libutil.h,AC_DEFINE(HAVE_LIBUTIL_H))
+AC_CHECK_HEADER(pty.h,AC_DEFINE(HAVE_PTY_H))
 
 ######################################################################
 # End of library/func checking
