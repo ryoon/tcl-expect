@@ -660,6 +660,7 @@ SHLIB_CFLAGS
 SHLIB_LD_LIBS
 SHLIB_LD
 STLIB_LD
+SHLIB_VERSION
 CFLAGS_WARNING
 CFLAGS_OPTIMIZE
 CFLAGS_DEBUG
@@ -6468,7 +6469,7 @@ fi
 		LD_SEARCH_FLAGS='-Wl,-rpath,${LIB_RUNTIME_DIR}'
 fi
 	    ;;
-	OpenBSD-*)
+	OpenBSD-*|MirBSD-*)
 	    SHLIB_CFLAGS="-fPIC"
 	    SHLIB_LD='${CC} -shared ${SHLIB_CFLAGS}'
 	    SHLIB_SUFFIX=".so"
@@ -6551,11 +6552,11 @@ fi
 		;;
 	    esac
 	    ;;
-	FreeBSD-*)
+	FreeBSD-*|DragonFly-*)
 	    # This configuration from FreeBSD Ports.
 	    SHLIB_CFLAGS="-fPIC"
 	    SHLIB_LD="${CC} -shared"
-	    TCL_SHLIB_LD_EXTRAS="-soname \$@"
+	    TCL_SHLIB_LD_EXTRAS="-Wl,-soname \$@"
 	    SHLIB_SUFFIX=".so"
 	    LDFLAGS=""
 	    if test $doRpath = yes; then :
@@ -6946,6 +6947,39 @@ fi
 	    CC_SEARCH_FLAGS=""
 	    LD_SEARCH_FLAGS=""
 	    ;;
+	UnixWare-5*|SCO_SV-5*)
+            LDFLAGS="$LDFLAGS -lsocket -lnsl -lz"
+	    if test "$GCC" = yes; then :
+
+		SHLIB_CFLAGS="-fPIC"
+		SHLIB_LD="$GCC $LDFLAGS -shared"
+
+else
+
+		SHLIB_CFLAGS="-KPIC"
+		SHLIB_LD="$GCC $LDFLAGS -G -z text"
+
+fi
+	    SHLIB_LD_LIBS=""
+	    SHLIB_SUFFIX=".so"
+	    CC_SEARCH_FLAGS=""
+	    LD_SEARCH_FLAGS=""
+            if test "${TCL_THREADS}" = "1"; then :
+		# The -lpthread needs to go in the CFLAGS, not LIBS
+		LIBS=`echo $LIBS | sed s/-lpthread//`
+		if test "$GCC" = yes; then :
+
+			CFLAGS="$CFLAGS -pthread"
+			LDFLAGS="$LDFLAGS -pthread"
+
+else
+
+			CFLAGS="$CFLAGS -Kpthread"
+			LDFLAGS="$LDFLAGS -Kpthread"
+
+fi
+            fi
+	    ;;
 	SunOS-5.[0-6])
 	    # Careful to not let 5.10+ fall into this case
 
@@ -7138,7 +7172,7 @@ fi
 	    BSD/OS*) ;;
 	    CYGWIN_*) ;;
 	    IRIX*) ;;
-	    NetBSD-*|FreeBSD-*|OpenBSD-*) ;;
+	    NetBSD-*|FreeBSD-*|OpenBSD-*|DragonFly-*|MirBSD-*) ;;
 	    Darwin-*) ;;
 	    SCO_SV-3.2*) ;;
 	    windows) ;;
@@ -7167,6 +7201,8 @@ fi
 	# TEA specific: use PACKAGE_VERSION instead of VERSION
 	UNSHARED_LIB_SUFFIX='${PACKAGE_VERSION}.a'
 fi
+
+
 
 
 
@@ -9618,14 +9654,7 @@ fi
 
 PACKAGE_VERSION_NODOTS="`echo $PACKAGE_VERSION | sed -e 's/\.//g'`"
 
-if test "${TCL_LIB_VERSIONS_OK}" = "ok"; then
-    EXP_LIB_VERSION=$PACKAGE_VERSION
-else
-    EXP_LIB_VERSION=$PACKAGE_VERSION_NODOTS
-fi
-if test $iunix -eq 1 ; then
-    EXP_LIB_VERSION=$PACKAGE_VERSION_NODOTS
-fi
+EXP_LIB_VERSION=$PACKAGE_VERSION_NODOTS
 
 # also remove dots on systems that don't support filenames > 14
 # (are there systems which support shared libs and restrict filename lengths!?)
@@ -9680,11 +9709,7 @@ if test "$FRAMEWORK_BUILD" = "1" ; then
     $as_echo "#define EXP_FRAMEWORK 1" >>confdefs.h
 
 else
-    if test "${TCL_LIB_VERSIONS_OK}" = "ok"; then
-        EXP_LIB_FLAG="-lexpect${EXP_LIB_VERSION}"
-    else
-        EXP_LIB_FLAG="-lexpect`echo ${EXP_LIB_VERSION} | tr -d .`"
-    fi
+    EXP_LIB_FLAG="-lexpect`echo ${EXP_LIB_VERSION} | tr -d .`"
     EXP_BUILD_LIB_SPEC="-L`pwd` ${EXP_LIB_FLAG}"
     EXP_LIB_SPEC="-L${libdir} ${EXP_LIB_FLAG}"
 fi
@@ -9986,6 +10011,9 @@ rm -f conftest*
     # substituted. (@@@ Might not be necessary anymore)
     #--------------------------------------------------------------------
 
+    PVNODOTS=`echo ${PACKAGE_VERSION} | tr -d .`
+    SHARED_LIB_SUFFIX=${PVNODOTS}.so
+    UNSHARED_LIB_SUFFIX=${PVNODOTS}.a
     if test "${TEA_PLATFORM}" = "windows" ; then
 	if test "${SHARED_BUILD}" = "1" ; then
 	    # We force the unresolved linking of symbols that are really in
