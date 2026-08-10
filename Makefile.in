@@ -123,9 +123,9 @@ includedir	= @includedir@
 DESTDIR		=
 
 PKG_DIR		= $(PACKAGE_NAME)$(PACKAGE_VERSION)
-pkgdatadir	= $(datadir)/$(PKG_DIR)
-pkglibdir	= $(libdir)/$(PKG_DIR)
-pkgincludedir	= $(includedir)/$(PKG_DIR)
+pkgdatadir	= $(datadir)
+pkglibdir	= $(libdir)
+pkgincludedir	= $(includedir)
 
 top_builddir	= .
 
