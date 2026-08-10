@@ -8309,16 +8309,16 @@ fi
 # Check for FreeBSD/NetBSD openpty()
 unset ac_cv_func_openpty
 
-ac_fn_c_check_func "$LINENO" "openpty" "ac_cv_func_openpty"
-if test "x$ac_cv_func_openpty" = xyes; then :
+ac_fn_c_check_decl "$LINENO" "openpty" "ac_cv_have_decl_openpty" "#include <util.h>
+"
+if test "x$ac_cv_have_decl_openpty" = xyes; then :
   $as_echo "#define HAVE_OPENPTY 1" >>confdefs.h
  openpty=1
 else
   openpty=0
 fi
 
-if test $openpty -eq 0 ; then
-  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for openpty in -lutil" >&5
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for openpty in -lutil" >&5
 $as_echo_n "checking for openpty in -lutil... " >&6; }
 if ${ac_cv_lib_util_openpty+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -8365,11 +8365,17 @@ if test "x$ac_cv_lib_util_openpty" = xyes; then :
 
 fi
 
-fi
 
 ac_fn_c_check_header_mongrel "$LINENO" "libutil.h" "ac_cv_header_libutil_h" "$ac_includes_default"
 if test "x$ac_cv_header_libutil_h" = xyes; then :
   $as_echo "#define HAVE_LIBUTIL_H 1" >>confdefs.h
+
+fi
+
+
+ac_fn_c_check_header_mongrel "$LINENO" "pty.h" "ac_cv_header_pty_h" "$ac_includes_default"
+if test "x$ac_cv_header_pty_h" = xyes; then :
+  $as_echo "#define HAVE_PTY_H 1" >>confdefs.h
 
 fi
 
