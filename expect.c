@@ -284,7 +284,6 @@ exp_eval_with_one_arg(
     Tcl_Token *tokenPtr;
     CONST char *p;
     CONST char *next;
-    int rc;
     int bytesLeft, numWords;
     Tcl_Parse parse;
 
@@ -307,7 +306,6 @@ exp_eval_with_one_arg(
     do {
 	if (Tcl_ParseCommand(interp, p, bytesLeft, 0, &parse)
 	        != TCL_OK) {
-	    rc = TCL_ERROR;
 	    goto done;
 	}
 	numWords = parse.numWords;
@@ -1762,13 +1760,11 @@ expIRead( /* INTL */
     int save_flags)
 {
     int cc = EXP_TIMEOUT;
-    int size;
 
     /* We drop one third when are at least 2/3 full */
     /* condition is (size >= max*2/3) <=> (size*3 >= max*2) */
     if (expSizeGet(esPtr)*3 >= esPtr->input.max*2)
 	exp_buffer_shuffle(interp,esPtr,save_flags,EXPECT_OUT,"expect");
-    size = expSizeGet(esPtr);
 
 #ifdef SIMPLE_EVENT
  restart:
@@ -2543,8 +2539,6 @@ Exp_ExpectObjCmd(
 
     int result;			/* Tcl result */
     
-    time_t start_time_total;	/* time at beginning of this procedure */
-    time_t start_time = 0;	/* time when restart label hit */
     time_t current_time = 0;	/* current time (when we last looked)*/
     time_t end_time = 0;	/* future time at which to give up */
 
@@ -2584,8 +2578,6 @@ Exp_ExpectObjCmd(
     }
 
     Tcl_GetTime (&temp_time);
-    start_time_total = temp_time.sec;
-    start_time = start_time_total;
     reset_timer = TRUE;
     
     if (&StdinoutPlaceholder == (ExpState *)clientData) {
@@ -2640,7 +2632,6 @@ Exp_ExpectObjCmd(
     if (first_time) first_time = 0;
     else {
         Tcl_GetTime (&temp_time);
-	start_time = temp_time.sec;
     }
 
     if (eg.timeout_specified_by_flag) {
