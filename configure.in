@@ -916,14 +916,7 @@ main()
 
 PACKAGE_VERSION_NODOTS="`echo $PACKAGE_VERSION | sed -e 's/\.//g'`"
 
-if test "${TCL_LIB_VERSIONS_OK}" = "ok"; then
-    EXP_LIB_VERSION=$PACKAGE_VERSION
-else
-    EXP_LIB_VERSION=$PACKAGE_VERSION_NODOTS
-fi
-if test $iunix -eq 1 ; then
-    EXP_LIB_VERSION=$PACKAGE_VERSION_NODOTS
-fi
+EXP_LIB_VERSION=$PACKAGE_VERSION_NODOTS
 
 # also remove dots on systems that don't support filenames > 14
 # (are there systems which support shared libs and restrict filename lengths!?)
@@ -938,11 +931,7 @@ if test "$FRAMEWORK_BUILD" = "1" ; then
     EXP_LIB_FILE="Expect"
     AC_DEFINE(EXP_FRAMEWORK)
 else
-    if test "${TCL_LIB_VERSIONS_OK}" = "ok"; then
-        EXP_LIB_FLAG="-lexpect${EXP_LIB_VERSION}"
-    else
-        EXP_LIB_FLAG="-lexpect`echo ${EXP_LIB_VERSION} | tr -d .`"
-    fi
+    EXP_LIB_FLAG="-lexpect`echo ${EXP_LIB_VERSION} | tr -d .`"
     EXP_BUILD_LIB_SPEC="-L`pwd` ${EXP_LIB_FLAG}"
     EXP_LIB_SPEC="-L${libdir} ${EXP_LIB_FLAG}"
 fi

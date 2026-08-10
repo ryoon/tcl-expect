@@ -1576,7 +1576,7 @@ dnl AC_CHECK_TOOL(AR, ar)
 		CC_SEARCH_FLAGS='-Wl,-rpath,${LIB_RUNTIME_DIR}'
 		LD_SEARCH_FLAGS='-Wl,-rpath,${LIB_RUNTIME_DIR}'])
 	    ;;
-	OpenBSD-*)
+	OpenBSD-*|MirBSD-*)
 	    SHLIB_CFLAGS="-fPIC"
 	    SHLIB_LD='${CC} -shared ${SHLIB_CFLAGS}'
 	    SHLIB_SUFFIX=".so"
@@ -1628,11 +1628,11 @@ dnl AC_CHECK_TOOL(AR, ar)
 		;;
 	    esac
 	    ;;
-	FreeBSD-*)
+	FreeBSD-*|DragonFly-*)
 	    # This configuration from FreeBSD Ports.
 	    SHLIB_CFLAGS="-fPIC"
 	    SHLIB_LD="${CC} -shared"
-	    TCL_SHLIB_LD_EXTRAS="-soname \$[@]"
+	    TCL_SHLIB_LD_EXTRAS="-Wl,-soname \$[@]"
 	    SHLIB_SUFFIX=".so"
 	    LDFLAGS=""
 	    AS_IF([test $doRpath = yes], [
@@ -1827,6 +1827,31 @@ dnl AC_CHECK_TOOL(AR, ar)
 	    CC_SEARCH_FLAGS=""
 	    LD_SEARCH_FLAGS=""
 	    ;;
+	UnixWare-5*|SCO_SV-5*)
+            LDFLAGS="$LDFLAGS -lsocket -lnsl -lz"
+	    AS_IF([test "$GCC" = yes], [
+		SHLIB_CFLAGS="-fPIC"
+		SHLIB_LD="$GCC $LDFLAGS -shared"
+	    ], [
+		SHLIB_CFLAGS="-KPIC"
+		SHLIB_LD="$GCC $LDFLAGS -G -z text"
+	    ])
+	    SHLIB_LD_LIBS=""
+	    SHLIB_SUFFIX=".so"
+	    CC_SEARCH_FLAGS=""
+	    LD_SEARCH_FLAGS=""
+            if test "${TCL_THREADS}" = "1"; then :
+		# The -lpthread needs to go in the CFLAGS, not LIBS
+		LIBS=`echo $LIBS | sed s/-lpthread//`
+		AS_IF([test "$GCC" = yes], [
+			CFLAGS="$CFLAGS -pthread"
+			LDFLAGS="$LDFLAGS -pthread"
+		], [
+			CFLAGS="$CFLAGS -Kpthread"
+			LDFLAGS="$LDFLAGS -Kpthread"
+		])
+            fi
+	    ;;
 	SunOS-5.[[0-6]])
 	    # Careful to not let 5.10+ fall into this case
 
@@ -1968,7 +1993,7 @@ dnl # preprocessing tests use only CPPFLAGS.
 	    BSD/OS*) ;;
 	    CYGWIN_*) ;;
 	    IRIX*) ;;
-	    NetBSD-*|FreeBSD-*|OpenBSD-*) ;;
+	    NetBSD-*|FreeBSD-*|OpenBSD-*|DragonFly-*|MirBSD-*) ;;
 	    Darwin-*) ;;
 	    SCO_SV-3.2*) ;;
 	    windows) ;;
@@ -1991,6 +2016,8 @@ dnl # preprocessing tests use only CPPFLAGS.
     AC_SUBST(CFLAGS_DEBUG)
     AC_SUBST(CFLAGS_OPTIMIZE)
     AC_SUBST(CFLAGS_WARNING)
+
+    AC_SUBST(SHLIB_VERSION)
 
     AC_SUBST(STLIB_LD)
     AC_SUBST(SHLIB_LD)
@@ -3214,6 +3241,9 @@ print("manifest needed")
     # substituted. (@@@ Might not be necessary anymore)
     #--------------------------------------------------------------------
 
+    PVNODOTS=`echo ${PACKAGE_VERSION} | tr -d .`
+    SHARED_LIB_SUFFIX=${PVNODOTS}.so
+    UNSHARED_LIB_SUFFIX=${PVNODOTS}.a
     if test "${TEA_PLATFORM}" = "windows" ; then
 	if test "${SHARED_BUILD}" = "1" ; then
 	    # We force the unresolved linking of symbols that are really in
