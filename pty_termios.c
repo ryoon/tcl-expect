@@ -64,11 +64,13 @@ with openpty which supports 4000 while ptmx supports 60. */
 #include <sys/types.h>
 #include <sys/stat.h>
 #if defined(HAVE_OPENPTY)
-#include <termios.h>
+#include <util.h>
 #if defined(HAVE_LIBUTIL_H)
 #include <libutil.h>
 #else
+#if defined(HAVE_PTY_H)
 #include <pty.h>
+#endif
 #endif
 #endif
 
