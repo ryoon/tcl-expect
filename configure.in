@@ -167,8 +167,13 @@ AC_MSG_CHECKING([union wait])
 AC_CACHE_VAL(tcl_cv_union_wait,
     AC_TRY_LINK([#include <sys/types.h> 
 #include <sys/wait.h>], [
+int
+main(void)
+{
 union wait x;
-WIFEXITED(x);	/* Generates compiler error if WIFEXITED uses an int. */
+int ret = waitpid(1, &x, 0);
+return 0;
+}
 			 ], tcl_cv_union_wait=yes, tcl_cv_union_wait=no))
 AC_MSG_RESULT($tcl_cv_union_wait)
 if test $tcl_cv_union_wait = no; then
